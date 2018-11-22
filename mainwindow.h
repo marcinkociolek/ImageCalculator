@@ -17,14 +17,34 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
-
     boost::filesystem::path ImageFolder;
     boost::filesystem::path OutFolder;
 
-    void OpenImageFolder();
+    std::string FileName;
+    cv::Mat ImIn;
+    cv::Mat ImOut;
 
+    int operationMode;
+
+    double displayScale;
+
+    bool showInImage;
+
+    double resizeScale;
+    int resizeInterpolation;
+
+
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+
+
+    void OpenImageFolder();
+    void ReadImage();
+    void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale);
+    void ModeSelect();
+    void TiffRoiFromRed();
+    void ImageResize();
 
 private slots:
 
@@ -32,8 +52,29 @@ private slots:
 
     void on_pushButtonOpenOutFolder_clicked();
 
+    void on_lineEditRegexImageFile_returnPressed();
+
+    void on_listWidgetImageFiles_currentTextChanged(const QString &currentText);
+
+    void on_spinBoxScaleBase_valueChanged(int arg1);
+
+    void on_spinBoxScalePower_valueChanged(int arg1);
+
+    void on_tabWidgetMode_currentChanged(int index);
+
+
+
+
+    void on_lineEditImageScale_returnPressed();
+
+    void on_comboBoxImageInterpolationMethod_currentIndexChanged(int index);
+
+    void on_checkBoxShowOutput_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
+
+
 };
 
 #endif // MAINWINDOW_H
