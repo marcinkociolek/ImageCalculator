@@ -72,6 +72,8 @@ private slots:
 
     void on_checkBoxShowOutput_toggled(bool checked);
 
+    void on_pushButtonSaveResized_clicked();
+
 private:
     Ui::MainWindow *ui;
 

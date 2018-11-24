@@ -101,7 +101,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>.+.png</string>
+      <string>.+.tif</string>
      </property>
     </widget>
     <widget class="QListWidget" name="listWidgetImageFiles">
@@ -227,6 +227,51 @@
       <string>Scale Power</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBoxShowTiffInfo">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>10</y>
+       <width>101</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Show Tiff Info</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxShowMatInfo">
+     <property name="geometry">
+      <rect>
+       <x>110</x>
+       <y>40</y>
+       <width>101</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Show Mat Info</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBoxAutocleanOut">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>10</y>
+       <width>101</width>
+       <height>25</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Auto clean output text</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidgetMode">
     <property name="geometry">
@@ -283,6 +328,48 @@
       </property>
       <property name="text">
        <string>0.5</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxShowOutMatInfo">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>110</y>
+        <width>101</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Out Mat Info</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxShowOutTiffInfo">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>80</y>
+        <width>131</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Out Tiff Info</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButtonSaveResized">
+      <property name="geometry">
+       <rect>
+        <x>190</x>
+        <y>10</y>
+        <width>80</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Save Resized</string>
       </property>
      </widget>
     </widget>

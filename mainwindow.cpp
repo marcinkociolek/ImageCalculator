@@ -94,7 +94,7 @@ string MatPropetiesAsText(Mat Im)
 //------------------------------------------------------------------------------------------------------------------------------
 string TiffFilePropetiesAsText(string FileName)
 {
-    double xRes,yRes;
+    float xRes,yRes;
     uint32 imWidth, imLength;
     uint16 resolutionUnit;
     TIFF *tifIm = TIFFOpen(FileName.c_str(),"r");
@@ -111,8 +111,8 @@ string TiffFilePropetiesAsText(string FileName)
         Out += "max x = " + to_string(imLength);
         Out += ", max y = " + to_string(imWidth);
         Out += ", ResUnit = " + to_string(resolutionUnit);
-        Out += ", xRes = " + to_string(xRes);
-        Out += ", yRes = " + to_string(yRes);
+        Out += ", xRes = " + to_string(1.0/xRes);
+        Out += ", yRes = " + to_string(1.0/yRes);
 
     }
     else
@@ -213,7 +213,8 @@ void MainWindow::ModeSelect()
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ReadImage()
 {
-
+    if(ui->checkBoxAutocleanOut->checkState())
+        ui->textEditOut->clear();
 
     ImIn = imread(FileName, CV_LOAD_IMAGE_ANYDEPTH);
     if(ImIn.empty())
@@ -222,8 +223,12 @@ void MainWindow::ReadImage()
         return;
     }
 
-    ui->textEditOut->append(QString::fromStdString(TiffFilePropetiesAsText(FileName)));
-    ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImIn)));
+    if(ui->checkBoxShowTiffInfo->checkState())
+        ui->textEditOut->append(QString::fromStdString(TiffFilePropetiesAsText(FileName)));
+
+    if(ui->checkBoxShowMatInfo->checkState())
+        ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImIn)));
+
     if(ui->checkBoxShowInput->checkState())
         ShowsScaledImage(ImIn, "Input Image", displayScale);
 }
@@ -300,7 +305,9 @@ void MainWindow::ImageResize()
     ui->textEditOut->append(QString::fromStdString(InterpolationToString(resizeInterpolation)));
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", 1.0);
-    ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImOut)));
+
+    if(ui->checkBoxShowOutMatInfo->checkState())
+        ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImOut)));
 
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -416,4 +423,28 @@ void MainWindow::on_comboBoxImageInterpolationMethod_currentIndexChanged(int ind
 void MainWindow::on_checkBoxShowOutput_toggled(bool checked)
 {
    ModeSelect();
+}
+
+void MainWindow::on_pushButtonSaveResized_clicked()
+{
+    if (!exists(OutFolder))
+    {
+        ui->textEditOut->append(QString::fromStdString(" Image folder : " + OutFolder.string()+ " not exists "));
+        return;
+    }
+    if (!is_directory(OutFolder))
+    {
+        ui->textEditOut->append(QString::fromStdString(" Image folder : " + OutFolder.string()+ " This is not a directory path "));
+        return;
+    }
+
+    path fileToSave = OutFolder;
+    path fileToOpen(FileName);
+    fileToSave.append(fileToOpen.stem().string()+ "resized.tif");
+
+    imwrite(fileToSave.string(),ImOut);
+
+
+
+
 }
