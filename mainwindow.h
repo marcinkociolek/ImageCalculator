@@ -33,6 +33,7 @@ public:
     double resizeScale;
     int resizeInterpolation;
 
+    bool ready;
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();

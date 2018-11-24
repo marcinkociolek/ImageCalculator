@@ -15,6 +15,8 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "DispLib.h"
+#include <tiffio.h>
+
 
 using namespace boost;
 using namespace std;
@@ -88,6 +90,37 @@ string MatPropetiesAsText(Mat Im)
     }
     return Out;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------
+string TiffFilePropetiesAsText(string FileName)
+{
+    double xRes,yRes;
+    uint32 imWidth, imLength;
+    uint16 resolutionUnit;
+    TIFF *tifIm = TIFFOpen(FileName.c_str(),"r");
+    string Out ="Tiff properties: ";
+    if(tifIm)
+    {
+        TIFFGetField(tifIm, TIFFTAG_XRESOLUTION , &xRes);
+        TIFFGetField(tifIm, TIFFTAG_YRESOLUTION , &yRes);
+        TIFFGetField(tifIm, TIFFTAG_IMAGEWIDTH , &imWidth);
+        TIFFGetField(tifIm, TIFFTAG_IMAGELENGTH , &imLength);
+        TIFFGetField(tifIm, TIFFTAG_RESOLUTIONUNIT , &resolutionUnit);
+
+
+        Out += "max x = " + to_string(imLength);
+        Out += ", max y = " + to_string(imWidth);
+        Out += ", ResUnit = " + to_string(resolutionUnit);
+        Out += ", xRes = " + to_string(xRes);
+        Out += ", yRes = " + to_string(yRes);
+
+    }
+    else
+        Out += " improper file ";
+    //TIFFGetField(tifIm, TIFFTAG_IMAGEWIDTH, &width);
+    TIFFClose(tifIm);
+    return Out;
+}
 //------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------
 //          My functions in the Mainwindow class
@@ -98,7 +131,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    ready = 0;
     ui->comboBoxImageInterpolationMethod->addItem(QString::fromStdString(InterpolationToString(0)));
     ui->comboBoxImageInterpolationMethod->addItem(QString::fromStdString(InterpolationToString(1)));
     ui->comboBoxImageInterpolationMethod->addItem(QString::fromStdString(InterpolationToString(2)));
@@ -122,6 +155,7 @@ MainWindow::MainWindow(QWidget *parent) :
     displayScale = pow(double(ui->spinBoxScaleBase->value()), double(ui->spinBoxScalePower->value()));
 
     ui->textEditOut->clear();
+    ready = 1;
 }
 //------------------------------------------------------------------------------------------------------------------------------
 MainWindow::~MainWindow()
@@ -179,8 +213,16 @@ void MainWindow::ModeSelect()
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ReadImage()
 {
-    ImIn = imread(FileName);
 
+
+    ImIn = imread(FileName, CV_LOAD_IMAGE_ANYDEPTH);
+    if(ImIn.empty())
+    {
+        ui->textEditOut->append("improper file");
+        return;
+    }
+
+    ui->textEditOut->append(QString::fromStdString(TiffFilePropetiesAsText(FileName)));
     ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImIn)));
     if(ui->checkBoxShowInput->checkState())
         ShowsScaledImage(ImIn, "Input Image", displayScale);
