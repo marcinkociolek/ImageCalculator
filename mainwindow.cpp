@@ -122,6 +122,33 @@ string TiffFilePropetiesAsText(string FileName)
     return Out;
 }
 //------------------------------------------------------------------------------------------------------------------------------
+bool GetTiffProperties(string FileName, float &xRes, float &yRes)
+{
+    //float xRes,yRes;
+    //uint32 imWidth, imLength;
+    //uint16 resolutionUnit;
+    TIFF *tifIm = TIFFOpen(FileName.c_str(),"r");
+    string Out ="Tiff properties: ";
+    if(tifIm)
+    {
+        TIFFGetField(tifIm, TIFFTAG_XRESOLUTION , &xRes);
+        TIFFGetField(tifIm, TIFFTAG_YRESOLUTION , &yRes);
+        //TIFFGetField(tifIm, TIFFTAG_IMAGEWIDTH , &imWidth);
+        //TIFFGetField(tifIm, TIFFTAG_IMAGELENGTH , &imLength);
+        //TIFFGetField(tifIm, TIFFTAG_RESOLUTIONUNIT , &resolutionUnit);
+
+        TIFFClose(tifIm);
+        return 1;
+    }
+    else
+    {
+        xRes = 1.0;
+        yRes = 1.0;
+        return 0;
+    }
+}
+//------------------------------------------------------------------------------------------------------------------------------
+
 //------------------------------------------------------------------------------------------------------------------------------
 //          My functions in the Mainwindow class
 //------------------------------------------------------------------------------------------------------------------------------
@@ -221,6 +248,31 @@ void MainWindow::ReadImage()
     {
         ui->textEditOut->append("improper file");
         return;
+    }
+
+    path FileNamePath(FileName);
+    string extension = FileNamePath.extension().string();
+
+    if(extension == ".tif" || extension == ".tiff")
+    {
+        float xRes, yRes;
+        GetTiffProperties(FileName, xRes, yRes);
+        xPixelSize = 1.0/(double)xRes;
+        if(!ui->checkBoxKeeprequestedPixelSize->checkState())
+        {
+            xPixSizeOut = xPixelSize / resizeScale;
+            ui->lineEditPixelSize->setText(QString::fromStdString(to_string(xPixSizeOut)));
+        }
+        else
+        {
+            resizeScale = xPixelSize / xPixSizeOut;
+            ui->lineEditImageScale->setText(QString::fromStdString(to_string(resizeScale)));
+        }
+
+    }
+    else
+    {
+        xPixelSize = 1.0;
     }
 
     if(ui->checkBoxShowTiffInfo->checkState())
@@ -393,6 +445,8 @@ void MainWindow::on_tabWidgetMode_currentChanged(int index)
 
 void MainWindow::on_lineEditImageScale_returnPressed()
 {
+    if(ui->checkBoxKeeprequestedPixelSize->checkState())
+        return;
     bool properConversion;
     double newScale = ui->lineEditImageScale->text().toDouble(&properConversion);
     if(!properConversion)
@@ -440,11 +494,28 @@ void MainWindow::on_pushButtonSaveResized_clicked()
 
     path fileToSave = OutFolder;
     path fileToOpen(FileName);
-    fileToSave.append(fileToOpen.stem().string()+ "resized.tif");
+    fileToSave.append(fileToOpen.stem().string()+ "resizedScale" + to_string(resizeScale) + ".tif");
 
     imwrite(fileToSave.string(),ImOut);
 
 
 
+
+}
+
+void MainWindow::on_lineEditPixelSize_returnPressed()
+{
+
+    if(!ui->checkBoxKeeprequestedPixelSize->checkState())
+        return;
+    bool properConversion;
+    double newPixelSize = ui->lineEditImageScale->text().toDouble(&properConversion);
+    if(!properConversion)
+    {
+        ui->lineEditPixelSize->setText("iproper value enter again");
+        return;
+    }
+
+    ModeSelect();
 
 }

@@ -27,10 +27,14 @@ public:
     int operationMode;
 
     double displayScale;
+    double xPixelSize;
 
     bool showInImage;
 
     double resizeScale;
+
+    double xPixSizeOut;
+
     int resizeInterpolation;
 
     bool ready;
@@ -73,6 +77,8 @@ private slots:
     void on_checkBoxShowOutput_toggled(bool checked);
 
     void on_pushButtonSaveResized_clicked();
+
+    void on_lineEditPixelSize_returnPressed();
 
 private:
     Ui::MainWindow *ui;
