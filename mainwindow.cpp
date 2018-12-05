@@ -113,12 +113,12 @@ string TiffFilePropetiesAsText(string FileName)
         Out += ", ResUnit = " + to_string(resolutionUnit);
         Out += ", xRes = " + to_string(1.0/xRes);
         Out += ", yRes = " + to_string(1.0/yRes);
-
+        TIFFClose(tifIm);
     }
     else
         Out += " improper file ";
     //TIFFGetField(tifIm, TIFFTAG_IMAGEWIDTH, &width);
-    TIFFClose(tifIm);
+
     return Out;
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -242,8 +242,12 @@ void MainWindow::ReadImage()
 {
     if(ui->checkBoxAutocleanOut->checkState())
         ui->textEditOut->clear();
-
-    ImIn = imread(FileName, CV_LOAD_IMAGE_ANYDEPTH);
+    int flags;
+    if(ui->checkBoxLoadAnydepth->checkState())
+        flags = CV_LOAD_IMAGE_ANYDEPTH;
+    else
+        flags = IMREAD_COLOR;
+    ImIn = imread(FileName, flags);
     if(ImIn.empty())
     {
         ui->textEditOut->append("improper file");
@@ -342,6 +346,14 @@ void MainWindow::TiffRoiFromRed()
     }
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ShowRegion(ImOut), "Output Image",displayScale);
+    if(ui->checkBoxSaveOutput->checkState())
+    {
+        path fileToSave = OutFolder;
+        path fileToOpen = FileName;
+        fileToSave.append(fileToOpen.stem().string());
+        imwrite(fileToSave.string() + ".tif" ,ImOut);
+
+    }
 
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -518,4 +530,14 @@ void MainWindow::on_lineEditPixelSize_returnPressed()
 
     ModeSelect();
 
+}
+
+void MainWindow::on_checkBoxLoadAnydepth_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxSaveOutput_toggled(bool checked)
+{
+    ModeSelect();
 }

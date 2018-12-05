@@ -101,7 +101,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>.+.tif</string>
+      <string>.+.png</string>
      </property>
     </widget>
     <widget class="QListWidget" name="listWidgetImageFiles">
@@ -272,6 +272,19 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBoxLoadAnydepth">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>40</y>
+       <width>101</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load Anydepth</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidgetMode">
     <property name="geometry">
@@ -283,12 +296,25 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
       <string>ColorToTiffRoi</string>
      </attribute>
+     <widget class="QCheckBox" name="checkBoxSaveOutput">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>20</y>
+        <width>91</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Save Output</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">

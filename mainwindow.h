@@ -80,6 +80,10 @@ private slots:
 
     void on_lineEditPixelSize_returnPressed();
 
+    void on_checkBoxLoadAnydepth_toggled(bool checked);
+
+    void on_checkBoxSaveOutput_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 
