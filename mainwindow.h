@@ -39,6 +39,9 @@ public:
 
     bool ready;
 
+    double minIm;
+    double maxIm;
+
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
@@ -46,10 +49,12 @@ public:
 
     void OpenImageFolder();
     void ReadImage();
-    void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale);
+    void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale, int dispMode = 0);
     void ModeSelect();
     void TiffRoiFromRed();
     void ImageResize();
+    void ImageLinearOperation();
+    //void GetDisplayParams(Mat ImIn, double maxIm, double minIm);
 
 private slots:
 
@@ -83,6 +88,10 @@ private slots:
     void on_checkBoxLoadAnydepth_toggled(bool checked);
 
     void on_checkBoxSaveOutput_toggled(bool checked);
+
+    void on_comboBoxDisplayRange_currentIndexChanged(int index);
+
+    void on_doubleSpinBoxIntOffset_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

@@ -14,6 +14,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "NormalizationLib.h"
 #include "DispLib.h"
 #include <tiffio.h>
 
@@ -148,6 +149,7 @@ bool GetTiffProperties(string FileName, float &xRes, float &yRes)
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------------------
 //          My functions in the Mainwindow class
@@ -167,6 +169,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->comboBoxImageInterpolationMethod->setCurrentIndex(CV_INTER_AREA);
     resizeInterpolation = ui->comboBoxImageInterpolationMethod->currentIndex();
+
+    ui->comboBoxDisplayRange->addItem("normal");
+    ui->comboBoxDisplayRange->addItem("fixed");
+    ui->comboBoxDisplayRange->addItem("minMax");
+    ui->comboBoxDisplayRange->addItem("+/-3 sigma");
+    ui->comboBoxDisplayRange->addItem("1% - 3%");
 
     resizeScale = 0.5;
     ui->lineEditImageScale->setText(QString("%1") .arg(resizeScale));
@@ -231,11 +239,15 @@ void MainWindow::ModeSelect()
     case 1:
         ImageResize();
         break;
-
+    case 2:
+        ImageLinearOperation();
+        break;
         default:
 
             break;
     }
+    if(ui->checkBoxShowOutput->checkState())
+        ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ReadImage()
@@ -287,9 +299,11 @@ void MainWindow::ReadImage()
 
     if(ui->checkBoxShowInput->checkState())
         ShowsScaledImage(ImIn, "Input Image", displayScale);
+
+    ShowsScaledImage(ImIn, "Input Image PC", displayScale, 1);
 }
 //------------------------------------------------------------------------------------------------------------------------------
-void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale)
+void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,int dispMode)
 {
     if(Im.empty())
     {
@@ -299,7 +313,33 @@ void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale)
 
     Mat ImToShow;
 
-    ImToShow = Im.clone();
+    double minDisp = 0.0;
+    double maxDisp = 255.0;
+
+    switch(dispMode)
+    {
+    case 2:
+        NormParamsMinMax(Im, &maxDisp, &minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, &maxDisp, &minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, &maxDisp, &minDisp);
+        break;
+    default:
+        break;
+    }
+
+    if(dispMode > 0)
+    {
+        Mat ImF;
+        Im.convertTo(ImF, CV_64F);
+        ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
+    }
+    else
+        ImToShow = Im.clone();
+
     if (dispScale != 1.0)
         cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
     imshow(ImWindowName, ImToShow);
@@ -344,8 +384,8 @@ void MainWindow::TiffRoiFromRed()
             *wImOut = 1;
         wImOut++;
     }
-    if(ui->checkBoxShowOutput->checkState())
-        ShowsScaledImage(ShowRegion(ImOut), "Output Image",displayScale);
+//    if(ui->checkBoxShowOutput->checkState())
+//        ShowsScaledImage(ShowRegion(ImOut), "Output Image",displayScale);
     if(ui->checkBoxSaveOutput->checkState())
     {
         path fileToSave = OutFolder;
@@ -367,14 +407,24 @@ void MainWindow::ImageResize()
     ImOut.release();
     cv::resize(ImIn,ImOut,Size(), resizeScale, resizeScale, resizeInterpolation);
     ui->textEditOut->append(QString::fromStdString(InterpolationToString(resizeInterpolation)));
-    if(ui->checkBoxShowOutput->checkState())
-        ShowsScaledImage(ImOut, "Output Image", 1.0);
 
     if(ui->checkBoxShowOutMatInfo->checkState())
         ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImOut)));
 
 }
 //------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::ImageLinearOperation()
+{
+    if(ImIn.empty())
+    {
+        ui->textEditOut->append("Empty Image");
+        return;
+    }
+
+    ImOut.release();
+
+    ImIn.convertTo(ImOut,CV_16U,ui->doubleSpinBoxIntensityScale->value(),ui->doubleSpinBoxIntOffset->value());
+}
 
 //------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------
@@ -538,6 +588,16 @@ void MainWindow::on_checkBoxLoadAnydepth_toggled(bool checked)
 }
 
 void MainWindow::on_checkBoxSaveOutput_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_comboBoxDisplayRange_currentIndexChanged(int index)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxIntOffset_valueChanged(double arg1)
 {
     ModeSelect();
 }
