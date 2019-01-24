@@ -93,6 +93,24 @@ private slots:
 
     void on_doubleSpinBoxIntOffset_valueChanged(double arg1);
 
+    void on_doubleSpinBoxFixMinDisp_valueChanged(double arg1);
+
+    void on_doubleSpinBoxFixMaxDisp_valueChanged(double arg1);
+
+    void on_checkBoxShowHist_stateChanged(int arg1);
+
+    void on_spinBoxHistBarWidth_valueChanged(int arg1);
+
+    void on_spinBoxHistScaleHeight_valueChanged(int arg1);
+
+    void on_spinBoxHistScaleCoef_valueChanged(int arg1);
+
+    void on_checkBoxAddNoise_stateChanged(int arg1);
+
+    void on_doubleSpinBoxGaussNianoiseSigma_valueChanged(double arg1);
+
+    void on_checkBoxAddNoise_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 

@@ -29,13 +29,15 @@ SOURCES += \
         mainwindow.cpp\
         ../../ProjectsLib/LibMarcin/NormalizationLib.cpp \
         ../../ProjectsLib/LibMarcin/DispLib.cpp \
-        ../../ProjectsLib/LibMarcin/StringFcLib.cpp
+        ../../ProjectsLib/LibMarcin/StringFcLib.cpp \
+    ../../ProjectsLib/LibMarcin/histograms.cpp
 
 HEADERS += \
         mainwindow.h \
          ../../ProjectsLib/LibMarcin/NormalizationLib.h \
          ../../ProjectsLib/LibMarcin/DispLib.h \
-         ../../ProjectsLib/LibMarcin/StringFcLib.h
+         ../../ProjectsLib/LibMarcin/StringFcLib.h \
+    ../../ProjectsLib/LibMarcin/histograms.h
 
 FORMS += \
         mainwindow.ui

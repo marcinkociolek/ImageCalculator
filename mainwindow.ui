@@ -168,6 +168,9 @@
      <property name="text">
       <string>Show output</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QSpinBox" name="spinBoxScaleBase">
      <property name="geometry">
@@ -309,6 +312,50 @@
        <width>131</width>
        <height>22</height>
       </rect>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="doubleSpinBoxFixMinDisp">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>110</y>
+       <width>62</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <double>65535.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>64.000000000000000</double>
+     </property>
+    </widget>
+    <widget class="QDoubleSpinBox" name="doubleSpinBoxFixMaxDisp">
+     <property name="geometry">
+      <rect>
+       <x>220</x>
+       <y>110</y>
+       <width>62</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="decimals">
+      <number>0</number>
+     </property>
+     <property name="maximum">
+      <double>65535.000000000000000</double>
+     </property>
+     <property name="singleStep">
+      <double>64.000000000000000</double>
+     </property>
+     <property name="value">
+      <double>1024.000000000000000</double>
      </property>
     </widget>
    </widget>
@@ -458,8 +505,8 @@
      <widget class="QDoubleSpinBox" name="doubleSpinBoxIntOffset">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>30</y>
+        <x>50</x>
+        <y>10</y>
         <width>71</width>
         <height>22</height>
        </rect>
@@ -480,8 +527,8 @@
      <widget class="QDoubleSpinBox" name="doubleSpinBoxIntensityScale">
       <property name="geometry">
        <rect>
-        <x>100</x>
-        <y>30</y>
+        <x>210</x>
+        <y>10</y>
         <width>62</width>
         <height>22</height>
        </rect>
@@ -499,10 +546,10 @@
      <widget class="QLabel" name="labelOffset">
       <property name="geometry">
        <rect>
-        <x>20</x>
+        <x>10</x>
         <y>10</y>
         <width>47</width>
-        <height>14</height>
+        <height>22</height>
        </rect>
       </property>
       <property name="text">
@@ -512,14 +559,160 @@
      <widget class="QLabel" name="labelScale">
       <property name="geometry">
        <rect>
-        <x>100</x>
+        <x>160</x>
         <y>10</y>
         <width>47</width>
-        <height>14</height>
+        <height>22</height>
        </rect>
       </property>
       <property name="text">
        <string>Scale</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxHistBarWidth">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>110</y>
+        <width>43</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>5</number>
+      </property>
+      <property name="value">
+       <number>4</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxHistScaleCoef">
+      <property name="geometry">
+       <rect>
+        <x>60</x>
+        <y>170</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="suffix">
+       <string/>
+      </property>
+      <property name="prefix">
+       <string>*10^</string>
+      </property>
+      <property name="minimum">
+       <number>0</number>
+      </property>
+      <property name="maximum">
+       <number>5</number>
+      </property>
+      <property name="value">
+       <number>1</number>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBoxHistScaleHeight">
+      <property name="geometry">
+       <rect>
+        <x>80</x>
+        <y>140</y>
+        <width>43</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>10</number>
+      </property>
+      <property name="singleStep">
+       <number>1</number>
+      </property>
+      <property name="value">
+       <number>2</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelMaxHistScale_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>140</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Scale</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelDirHistBarWidth_2">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>110</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Bar Width</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxShowHist">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>111</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Histogram</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxAddNoise">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>121</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Add Gaussian Noise</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="doubleSpinBoxGaussNianoiseSigma">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>40</y>
+        <width>91</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignJustify|Qt::AlignVCenter</set>
+      </property>
+      <property name="prefix">
+       <string>sigma </string>
+      </property>
+      <property name="decimals">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <double>65535.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>25.600000000000001</double>
       </property>
      </widget>
     </widget>

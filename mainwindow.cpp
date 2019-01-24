@@ -16,6 +16,8 @@
 
 #include "NormalizationLib.h"
 #include "DispLib.h"
+#include "histograms.h"
+
 #include <tiffio.h>
 
 
@@ -149,6 +151,7 @@ bool GetTiffProperties(string FileName, float &xRes, float &yRes)
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------
+
 //------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -175,6 +178,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxDisplayRange->addItem("minMax");
     ui->comboBoxDisplayRange->addItem("+/-3 sigma");
     ui->comboBoxDisplayRange->addItem("1% - 3%");
+
+    ui->comboBoxDisplayRange->setCurrentIndex(2);;
+
 
     resizeScale = 0.5;
     ui->lineEditImageScale->setText(QString("%1") .arg(resizeScale));
@@ -246,8 +252,7 @@ void MainWindow::ModeSelect()
 
             break;
     }
-    if(ui->checkBoxShowOutput->checkState())
-        ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
+
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ReadImage()
@@ -300,7 +305,7 @@ void MainWindow::ReadImage()
     if(ui->checkBoxShowInput->checkState())
         ShowsScaledImage(ImIn, "Input Image", displayScale);
 
-    ShowsScaledImage(ImIn, "Input Image PC", displayScale, 1);
+    ShowsScaledImage(ImIn, "Input Image PC", displayScale, ui->comboBoxDisplayRange->currentIndex());
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,int dispMode)
@@ -318,6 +323,11 @@ void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,
 
     switch(dispMode)
     {
+    case 1:
+        minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+
+        break;
     case 2:
         NormParamsMinMax(Im, &maxDisp, &minDisp);
         break;
@@ -336,6 +346,8 @@ void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,
         Mat ImF;
         Im.convertTo(ImF, CV_64F);
         ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
+        ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
+
     }
     else
         ImToShow = Im.clone();
@@ -384,8 +396,8 @@ void MainWindow::TiffRoiFromRed()
             *wImOut = 1;
         wImOut++;
     }
-//    if(ui->checkBoxShowOutput->checkState())
-//        ShowsScaledImage(ShowRegion(ImOut), "Output Image",displayScale);
+    if(ui->checkBoxShowOutput->checkState())
+        ShowsScaledImage(ShowRegion(ImOut), "Output Image",displayScale);
     if(ui->checkBoxSaveOutput->checkState())
     {
         path fileToSave = OutFolder;
@@ -410,6 +422,8 @@ void MainWindow::ImageResize()
 
     if(ui->checkBoxShowOutMatInfo->checkState())
         ui->textEditOut->append(QString::fromStdString(MatPropetiesAsText(ImOut)));
+    if(ui->checkBoxShowOutput->checkState())
+        ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
 
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -423,7 +437,67 @@ void MainWindow::ImageLinearOperation()
 
     ImOut.release();
 
-    ImIn.convertTo(ImOut,CV_16U,ui->doubleSpinBoxIntensityScale->value(),ui->doubleSpinBoxIntOffset->value());
+    ImIn.convertTo(ImOut,CV_16U,ui->doubleSpinBoxIntensityScale->value(),0);
+
+    if(ui->checkBoxShowHist->checkState())
+    {
+        HistogramInteger IntensityHist;
+
+        IntensityHist.FromMat(ImOut);
+        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                          ui->spinBoxHistScaleCoef->value(),
+                                          ui->spinBoxHistBarWidth->value());
+        imshow("Intensity histogram Input",HistPlot);
+        IntensityHist.Release();
+    }
+
+
+    Mat ImNoise;
+
+    if(ui->checkBoxAddNoise->checkState())
+    {
+        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
+
+        randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),16);
+
+        ImOut = ImOut + ImNoise;
+        if(ui->checkBoxShowHist->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat(ImNoise);
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+            imshow("Intensity histogram Noise",HistPlot);
+
+            IntensityHist.Release();
+        }
+    }
+    else
+    {
+        ImOut = ImOut + (uint16_t)round(ui->doubleSpinBoxIntOffset->value());
+    }
+
+    if(ui->checkBoxShowOutput->checkState())
+        ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
+
+    if(ui->checkBoxShowHist->checkState())
+    {
+        HistogramInteger IntensityHist;
+
+        IntensityHist.FromMat(ImOut);
+        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                          ui->spinBoxHistScaleCoef->value(),
+                                          ui->spinBoxHistBarWidth->value());
+        //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+        imshow("Intensity histogram Output",HistPlot);
+
+        IntensityHist.Release();
+    }
+
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -598,6 +672,51 @@ void MainWindow::on_comboBoxDisplayRange_currentIndexChanged(int index)
 }
 
 void MainWindow::on_doubleSpinBoxIntOffset_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxFixMinDisp_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxFixMaxDisp_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxShowHist_stateChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxHistBarWidth_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxHistScaleHeight_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxHistScaleCoef_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxAddNoise_stateChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxGaussNianoiseSigma_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxAddNoise_toggled(bool checked)
 {
     ModeSelect();
 }
