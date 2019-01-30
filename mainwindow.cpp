@@ -179,7 +179,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxDisplayRange->addItem("+/-3 sigma");
     ui->comboBoxDisplayRange->addItem("1% - 3%");
 
-    ui->comboBoxDisplayRange->setCurrentIndex(2);;
+    ui->comboBoxDisplayRange->setCurrentIndex(2);
+
+    ui->comboBoxGradientDirection->addItem("X");
+    ui->comboBoxGradientDirection->addItem("Y");
+    ui->comboBoxGradientDirection->addItem("XY");
 
 
     resizeScale = 0.5;
@@ -458,7 +462,7 @@ void MainWindow::ImageLinearOperation()
     {
         ImNoise = Mat::zeros(ImIn.size(), CV_16U);
 
-        randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),16);
+        randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),ui->doubleSpinBoxGaussNianoiseSigma->value());
 
         ImOut = ImOut + ImNoise;
         if(ui->checkBoxShowHist->checkState())
@@ -479,6 +483,54 @@ void MainWindow::ImageLinearOperation()
     {
         ImOut = ImOut + (uint16_t)round(ui->doubleSpinBoxIntOffset->value());
     }
+
+    if(ui->checkBoxAddGradient->checkState())
+    {
+        uint16_t *wImOut = (uint16_t *)ImOut.data;
+        int maxX = ImOut.cols;
+        int maxY = ImOut.rows;
+        for(int y = 0; y < maxY; y++)
+        {
+            for(int x = 0; x < maxX; x++)
+            {
+                int val;
+                switch(ui->comboBoxGradientDirection->currentIndex())
+                {
+                case 1:
+                    val = y * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    break;
+                case 2:
+                    val = (x + y) * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    break;
+                default:
+                    val = x * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    break;
+                }
+
+                *wImOut += (uint16_t)val;
+                wImOut ++;
+            }
+        }
+    }
+
+    if(ui->checkBoxAddRician->checkState())
+    {
+        ImNoise = Mat::ones(ImIn.size(), CV_16U);
+        uint16_t *wImOut = (uint16_t *)ImOut.data;
+        int maxX = ImOut.cols;
+        int maxY = ImOut.rows;
+        for(int y = 0; y < maxY; y++)
+        {
+            for(int x = 0; x < maxX; x++)
+            {
+                int val ;
+
+                *wImOut += (uint16_t)val;
+                wImOut ++;
+            }
+        }
+    }
+
 
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
@@ -717,6 +769,26 @@ void MainWindow::on_doubleSpinBoxGaussNianoiseSigma_valueChanged(double arg1)
 }
 
 void MainWindow::on_checkBoxAddNoise_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxAddGradient_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxGradientNominator_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxGradientDenominator_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_comboBoxGradientDirection_currentIndexChanged(int index)
 {
     ModeSelect();
 }

@@ -111,6 +111,14 @@ private slots:
 
     void on_checkBoxAddNoise_toggled(bool checked);
 
+    void on_checkBoxAddGradient_toggled(bool checked);
+
+    void on_spinBoxGradientNominator_valueChanged(int arg1);
+
+    void on_spinBoxGradientDenominator_valueChanged(int arg1);
+
+    void on_comboBoxGradientDirection_currentIndexChanged(int index);
+
 private:
     Ui::MainWindow *ui;
 
