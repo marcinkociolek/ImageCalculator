@@ -7,7 +7,11 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
+
 #include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/linear_congruential.hpp>
 
 #include <math.h>
 
@@ -208,16 +212,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
 
 
-    typedef boost::minstd_rand RNGType;
-    RNGType rng(time(0));
-    boost::uniform_int<> one_to_six( 1, 6 );
-    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
 
-
-    for(int i = 0; i < 8; i++)
-    {
-        ui->textEditOut->append(QString::number(RandomGen()));
-    }
 
     ready = 1;
 }
@@ -479,9 +474,50 @@ void MainWindow::ImageLinearOperation()
 
     if(ui->checkBoxAddNoise->checkState())
     {
-        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
+        //ImNoise = Mat::zeros(ImIn.size(), CV_16U);
+        //randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),ui->doubleSpinBoxGaussNianoiseSigma->value());
 
-        randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),ui->doubleSpinBoxGaussNianoiseSigma->value());
+
+//        typedef boost::minstd_rand RNGType;
+//        RNGType rng(time(0));
+//        boost::uniform_int<> rangeOfGeneration( ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value() );
+//        boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, rangeOfGeneration);
+
+
+
+
+        typedef boost::minstd_rand RNGType1;
+        static RNGType1 rng1(static_cast<unsigned> (time(0)));
+
+        //typedef boost::normal_distribution<double> NormalDistribution;
+
+        typedef boost::variate_generator<RNGType1>, boost::normal_distribution<double> > GaussianGenerator(rng1);
+          /** Initiate Random Number generator with current time */
+
+
+         /* Choose Normal Distribution */
+        NormalDistribution gaussian_dist(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
+
+          /* Create a Gaussian Random Number generator
+           *  by binding with previously defined
+           *  normal distribution object
+           */
+        RNGType1 generator(rng1, gaussian_dist);
+
+
+
+        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
+        uint16_t *wImNoise = (uint16_t *)ImNoise.data;
+        int maxX = ImNoise.cols;
+        int maxY = ImNoise.rows;
+        int maxXY = maxX * maxY;
+        for(int i = 0; i < maxXY; i++)
+        {
+                *wImNoise = RandomGen();
+                wImNoise ++;
+
+        }
+
 
         ImOut = ImOut + ImNoise;
         if(ui->checkBoxShowHist->checkState())
@@ -550,7 +586,41 @@ void MainWindow::ImageLinearOperation()
         }
     }
 
+    if(ui->checkBoxAddUniformNoise->checkState())
+    {
+        typedef boost::minstd_rand RNGType;
+        RNGType rng(time(0));
+        boost::uniform_int<> rangeOfGeneration( ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value() );
+        boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, rangeOfGeneration);
 
+        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
+
+        uint16_t *wImNoise = (uint16_t *)ImNoise.data;
+        int maxX = ImNoise.cols;
+        int maxY = ImNoise.rows;
+        int maxXY = maxX * maxY;
+        for(int i = 0; i < maxXY; i++)
+        {
+                *wImNoise = RandomGen();
+                wImNoise ++;
+
+        }
+        ImOut = ImOut + ImNoise;
+        if(ui->checkBoxShowHist->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat(ImNoise);
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+            imshow("Intensity histogram Noise",HistPlot);
+
+            IntensityHist.Release();
+        }
+
+    }
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
 
@@ -808,6 +878,21 @@ void MainWindow::on_spinBoxGradientDenominator_valueChanged(int arg1)
 }
 
 void MainWindow::on_comboBoxGradientDirection_currentIndexChanged(int index)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxUniformNoiseStart_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxUniformNoiseStop_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxAddUniformNoise_toggled(bool checked)
 {
     ModeSelect();
 }

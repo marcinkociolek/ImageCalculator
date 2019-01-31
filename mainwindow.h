@@ -4,10 +4,7 @@
 #include <QMainWindow>
 
 #include <boost/filesystem.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/linear_congruential.hpp>
+
 
 #include <opencv2/core/core.hpp>
 
@@ -126,6 +123,12 @@ private slots:
     void on_spinBoxGradientDenominator_valueChanged(int arg1);
 
     void on_comboBoxGradientDirection_currentIndexChanged(int index);
+
+    void on_spinBoxUniformNoiseStart_valueChanged(int arg1);
+
+    void on_spinBoxUniformNoiseStop_valueChanged(int arg1);
+
+    void on_checkBoxAddUniformNoise_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;
