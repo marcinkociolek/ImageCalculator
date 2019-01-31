@@ -7,6 +7,7 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/regex.hpp>
+#include <boost/random/normal_distribution.hpp>
 
 #include <math.h>
 
@@ -200,6 +201,24 @@ MainWindow::MainWindow(QWidget *parent) :
     displayScale = pow(double(ui->spinBoxScaleBase->value()), double(ui->spinBoxScalePower->value()));
 
     ui->textEditOut->clear();
+
+//    typedef boost::minstd_rand RNGType;
+//    RNGType rng(time(0));
+//    boost::uniform_int<> one_to_six( 1, 6 );
+//    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
+
+
+    typedef boost::minstd_rand RNGType;
+    RNGType rng(time(0));
+    boost::uniform_int<> one_to_six( 1, 6 );
+    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
+
+
+    for(int i = 0; i < 8; i++)
+    {
+        ui->textEditOut->append(QString::number(RandomGen()));
+    }
+
     ready = 1;
 }
 //------------------------------------------------------------------------------------------------------------------------------

@@ -54,6 +54,7 @@ win32: LIBS += -lopencv_world341d
 win32: LIBS += -LC:/boost_1_66_0/stage/x64/lib/
 win32:  LIBS += -lboost_filesystem-vc141-mt-gd-x64-1_66
 win32:  LIBS += -lboost_regex-vc141-mt-gd-x64-1_66
+win32:  LIBS += -lboost_random-vc141-mt-gd-x64-1_66
 
 win32: LIBS += -LC:/LibTiff/
 win32: LIBS += -llibtiff_i
@@ -66,6 +67,7 @@ win32: LIBS += -llibtiff_i
 #win32: LIBS += -LC:/boost_1_66_0/stage/x64/lib/
 #win32:  LIBS += -lboost_filesystem-vc141-mt-x64-1_66
 #win32:  LIBS += -lboost_regex-vc141-mt-x64-1_66
+#win32:  LIBS += -lboost_random-vc141-mt-x64-1_66
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

@@ -4,8 +4,13 @@
 #include <QMainWindow>
 
 #include <boost/filesystem.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/linear_congruential.hpp>
 
 #include <opencv2/core/core.hpp>
+
 
 
 namespace Ui {
@@ -41,6 +46,9 @@ public:
 
     double minIm;
     double maxIm;
+
+
+
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
