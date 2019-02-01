@@ -8,7 +8,10 @@
 
 #include <opencv2/core/core.hpp>
 
-
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/uniform_int.hpp>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/linear_congruential.hpp>
 
 namespace Ui {
 class MainWindow;
@@ -17,6 +20,9 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
+
+public:
+    static boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<>>* RandomGen1();
 
 public:
     boost::filesystem::path ImageFolder;

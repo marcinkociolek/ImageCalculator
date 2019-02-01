@@ -212,6 +212,13 @@ MainWindow::MainWindow(QWidget *parent) :
 //    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
 
 
+    boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
+
+    boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
+
+    boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
+
+    //RandomGen1() = & RandomGen();
 
 
     ready = 1;
@@ -477,32 +484,11 @@ void MainWindow::ImageLinearOperation()
         //ImNoise = Mat::zeros(ImIn.size(), CV_16U);
         //randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),ui->doubleSpinBoxGaussNianoiseSigma->value());
 
+        boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
 
-//        typedef boost::minstd_rand RNGType;
-//        RNGType rng(time(0));
-//        boost::uniform_int<> rangeOfGeneration( ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value() );
-//        boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, rangeOfGeneration);
+        boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
 
-
-
-
-        typedef boost::minstd_rand RNGType1;
-        static RNGType1 rng1(static_cast<unsigned> (time(0)));
-
-        //typedef boost::normal_distribution<double> NormalDistribution;
-
-        typedef boost::variate_generator<RNGType1>, boost::normal_distribution<double> > GaussianGenerator(rng1);
-          /** Initiate Random Number generator with current time */
-
-
-         /* Choose Normal Distribution */
-        NormalDistribution gaussian_dist(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
-
-          /* Create a Gaussian Random Number generator
-           *  by binding with previously defined
-           *  normal distribution object
-           */
-        RNGType1 generator(rng1, gaussian_dist);
+        boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
 
 
 
@@ -513,7 +499,7 @@ void MainWindow::ImageLinearOperation()
         int maxXY = maxX * maxY;
         for(int i = 0; i < maxXY; i++)
         {
-                *wImNoise = RandomGen();
+                *wImNoise = (uint16)round(RandomGen());
                 wImNoise ++;
 
         }
@@ -570,7 +556,16 @@ void MainWindow::ImageLinearOperation()
 
     if(ui->checkBoxAddRician->checkState())
     {
-        ImNoise = Mat::ones(ImIn.size(), CV_16U);
+
+        boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
+
+        boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
+
+        boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
+
+        ImOut = ImOut + (uint16_t)round(ui->doubleSpinBoxIntOffset->value());
+
+
         uint16_t *wImOut = (uint16_t *)ImOut.data;
         int maxX = ImOut.cols;
         int maxY = ImOut.rows;
@@ -578,9 +573,12 @@ void MainWindow::ImageLinearOperation()
         {
             for(int x = 0; x < maxX; x++)
             {
-                int val ;
+                double valRNG1 =  RandomGen() ;
+                double valRNG2 =  RandomGen() ;
+                double valIm = *wImOut;
+                double s = ui->doubleSpinBoxRicianS->value();
 
-                *wImOut += (uint16_t)val;
+                *wImOut += 1;
                 wImOut ++;
             }
         }
