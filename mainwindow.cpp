@@ -23,8 +23,12 @@
 #include "DispLib.h"
 #include "histograms.h"
 
+#include "mazdaroi.h"
+#include "mazdaroiio.h"
+
 #include <tiffio.h>
 
+typedef MazdaRoi<unsigned int, 2> MR2DType;
 
 using namespace boost;
 using namespace std;
@@ -206,26 +210,34 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->textEditOut->clear();
 
-//    typedef boost::minstd_rand RNGType;
-//    RNGType rng(time(0));
-//    boost::uniform_int<> one_to_six( 1, 6 );
-//    boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, one_to_six);
+    rngNormalDist = new boost::minstd_rand(time(0));
+    normalDistribution = new boost::normal_distribution<>(0.0, 1.0);
+    RandomGenNormDistribution = new boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<>>(*rngNormalDist, *normalDistribution);
 
+    rngUniformDist = new boost::minstd_rand(time(0));
+    uniformDistribution = new boost::uniform_int<>(ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value());
+    RandomGenUniformDistribution = new boost::variate_generator<boost::minstd_rand&, boost::uniform_int<>>(*rngUniformDist, *uniformDistribution);
 
-    boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
+    ui->comboBoxRoiShape->addItem("Rectange");
+    ui->comboBoxRoiShape->addItem("Circle");
 
-    boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
-
-    boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
-
-    //RandomGen1() = & RandomGen();
-
+    ui->spinBoxRoiShift->setMinimum( ui->spinBoxRoiSize->value());
+    ui->spinBoxRoiOffset->setMinimum( ui->spinBoxRoiSize->value()/2);
 
     ready = 1;
 }
 //------------------------------------------------------------------------------------------------------------------------------
 MainWindow::~MainWindow()
 {
+    delete rngNormalDist;
+    delete normalDistribution;
+    delete RandomGenNormDistribution;
+
+    delete rngUniformDist;
+    delete uniformDistribution;
+    delete RandomGenUniformDistribution;
+
+
     delete ui;
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -273,7 +285,11 @@ void MainWindow::ModeSelect()
     case 2:
         ImageLinearOperation();
         break;
-        default:
+    case 3:
+        CreateROI();
+        break;
+
+    default:
 
             break;
     }
@@ -462,55 +478,52 @@ void MainWindow::ImageLinearOperation()
 
     ImOut.release();
 
-    ImIn.convertTo(ImOut,CV_16U,ui->doubleSpinBoxIntensityScale->value(),0);
+    Mat ImIn32S;
+
+    if(ui->checkBoxPlainImage->checkState())
+        ImIn32S = Mat::ones(ImIn.size(), CV_32S) * (int32_t)round(ui->doubleSpinBoxIntOffset->value());
+    else
+        ImIn.convertTo(ImIn32S,CV_32S,ui->doubleSpinBoxIntensityScale->value(),0);
 
     if(ui->checkBoxShowHist->checkState())
     {
-        HistogramInteger IntensityHist;
+        HistogramInteger ImInHist;
 
-        IntensityHist.FromMat(ImOut);
-        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+        ImInHist.FromMat32S(ImIn32S);
+        Mat HistPlot = ImInHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                           ui->spinBoxHistScaleCoef->value(),
                                           ui->spinBoxHistBarWidth->value());
         imshow("Intensity histogram Input",HistPlot);
-        IntensityHist.Release();
+        ImInHist.Release();
     }
 
+    ImOut = ImIn32S + (int32_t)round(ui->doubleSpinBoxIntOffset->value());
 
     Mat ImNoise;
 
     if(ui->checkBoxAddNoise->checkState())
     {
-        //ImNoise = Mat::zeros(ImIn.size(), CV_16U);
-        //randn(ImNoise,ui->doubleSpinBoxIntOffset->value(),ui->doubleSpinBoxGaussNianoiseSigma->value());
 
-        boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
-
-        boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
-
-        boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
-
-
-
-        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
-        uint16_t *wImNoise = (uint16_t *)ImNoise.data;
+        double noiseStd = ui->doubleSpinBoxGaussNianoiseSigma->value();
+        ImNoise = Mat::zeros(ImIn.size(), CV_32S);
+        int32_t *wImNoise = (int32_t *)ImNoise.data;
         int maxX = ImNoise.cols;
         int maxY = ImNoise.rows;
         int maxXY = maxX * maxY;
         for(int i = 0; i < maxXY; i++)
         {
-                *wImNoise = (uint16)round(RandomGen());
-                wImNoise ++;
 
+                *wImNoise = (int32_t)round(RandomGenNormDistribution->operator()() * noiseStd);
+                wImNoise ++;
         }
 
 
-        ImOut = ImOut + ImNoise;
+
         if(ui->checkBoxShowHist->checkState())
         {
             HistogramInteger IntensityHist;
 
-            IntensityHist.FromMat(ImNoise);
+            IntensityHist.FromMat32S(ImNoise);
             Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                               ui->spinBoxHistScaleCoef->value(),
                                               ui->spinBoxHistBarWidth->value());
@@ -519,15 +532,14 @@ void MainWindow::ImageLinearOperation()
 
             IntensityHist.Release();
         }
+
+        ImOut += ImNoise;
     }
-    else
-    {
-        ImOut = ImOut + (uint16_t)round(ui->doubleSpinBoxIntOffset->value());
-    }
+
 
     if(ui->checkBoxAddGradient->checkState())
     {
-        uint16_t *wImOut = (uint16_t *)ImOut.data;
+        int32_t *wImOut = (int32_t *)ImOut.data;
         int maxX = ImOut.cols;
         int maxY = ImOut.rows;
         for(int y = 0; y < maxY; y++)
@@ -548,7 +560,7 @@ void MainWindow::ImageLinearOperation()
                     break;
                 }
 
-                *wImOut += (uint16_t)val;
+                *wImOut += (int32_t)val;
                 wImOut ++;
             }
         }
@@ -557,58 +569,32 @@ void MainWindow::ImageLinearOperation()
     if(ui->checkBoxAddRician->checkState())
     {
 
-        boost::minstd_rand rng(time(0)); // I don't seed it on purpouse (it's not relevant)
+        double ricianS = ui->doubleSpinBoxRicianS->value();
+        Mat ImTemp;
+        ImOut.copyTo(ImTemp);
 
-        boost::normal_distribution<> nd(ui->doubleSpinBoxIntOffset->value(), ui->doubleSpinBoxGaussNianoiseSigma->value());
-
-        boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<> > RandomGen(rng, nd);
-
-        ImOut = ImOut + (uint16_t)round(ui->doubleSpinBoxIntOffset->value());
-
-
-        uint16_t *wImOut = (uint16_t *)ImOut.data;
+        int32_t *wImOut = (int32_t *)ImOut.data;
         int maxX = ImOut.cols;
         int maxY = ImOut.rows;
         for(int y = 0; y < maxY; y++)
         {
             for(int x = 0; x < maxX; x++)
             {
-                double valRNG1 =  RandomGen() ;
-                double valRNG2 =  RandomGen() ;
                 double valIm = *wImOut;
-                double s = ui->doubleSpinBoxRicianS->value();
-
-                *wImOut += 1;
+                double valRNG1 =  RandomGenNormDistribution->operator()() * ricianS  + valIm;
+                double valRNG2 =  RandomGenNormDistribution->operator()() * ricianS ;
+                double valOut = round(sqrt(valRNG1 * valRNG1 + valRNG2 * valRNG2));
+                *wImOut = valOut;
                 wImOut ++;
             }
         }
-    }
 
-    if(ui->checkBoxAddUniformNoise->checkState())
-    {
-        typedef boost::minstd_rand RNGType;
-        RNGType rng(time(0));
-        boost::uniform_int<> rangeOfGeneration( ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value() );
-        boost::variate_generator< RNGType, boost::uniform_int<> >RandomGen(rng, rangeOfGeneration);
-
-        ImNoise = Mat::zeros(ImIn.size(), CV_16U);
-
-        uint16_t *wImNoise = (uint16_t *)ImNoise.data;
-        int maxX = ImNoise.cols;
-        int maxY = ImNoise.rows;
-        int maxXY = maxX * maxY;
-        for(int i = 0; i < maxXY; i++)
-        {
-                *wImNoise = RandomGen();
-                wImNoise ++;
-
-        }
-        ImOut = ImOut + ImNoise;
+        Mat ImNoise = ImOut - ImTemp;
         if(ui->checkBoxShowHist->checkState())
         {
             HistogramInteger IntensityHist;
 
-            IntensityHist.FromMat(ImNoise);
+            IntensityHist.FromMat32S(ImNoise);
             Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                               ui->spinBoxHistScaleCoef->value(),
                                               ui->spinBoxHistBarWidth->value());
@@ -618,6 +604,38 @@ void MainWindow::ImageLinearOperation()
             IntensityHist.Release();
         }
 
+
+    }
+
+    if(ui->checkBoxAddUniformNoise->checkState())
+    {
+        ImNoise = Mat::zeros(ImIn.size(), CV_32S);
+
+        int32_t *wImNoise = (int32_t *)ImNoise.data;
+        int maxX = ImNoise.cols;
+        int maxY = ImNoise.rows;
+        int maxXY = maxX * maxY;
+        for(int i = 0; i < maxXY; i++)
+        {
+                *wImNoise = RandomGenUniformDistribution->operator()();
+                wImNoise ++;
+
+        }
+
+        if(ui->checkBoxShowHist->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat32S(ImNoise);
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+            imshow("Intensity histogram Noise",HistPlot);
+
+            IntensityHist.Release();
+        }
+        ImOut += ImNoise;
     }
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
@@ -626,7 +644,7 @@ void MainWindow::ImageLinearOperation()
     {
         HistogramInteger IntensityHist;
 
-        IntensityHist.FromMat(ImOut);
+        IntensityHist.FromMat32S(ImOut);
         Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                           ui->spinBoxHistScaleCoef->value(),
                                           ui->spinBoxHistBarWidth->value());
@@ -637,6 +655,63 @@ void MainWindow::ImageLinearOperation()
     }
 
 
+}
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::CreateROI()
+{
+    if(ImIn.empty())
+    {
+        ui->textEditOut->append("Empty Image");
+        return;
+    }
+    Mat Mask = Mat::zeros(ImIn.size(),CV_16U);
+
+    int maxX = ImIn.cols;
+    int maxY = ImIn.rows;
+
+    int roiOffsetX = ui->spinBoxRoiOffset->value();
+    int roiOffsetY = ui->spinBoxRoiOffset->value();
+
+    int roiSize = ui->spinBoxRoiSize->value();
+    int roiShift = ui->spinBoxRoiShift->value();
+
+
+    int firstRoiY = roiOffsetY;
+    int lastRoiY = maxY - roiSize / 2;
+    int firstRoiX = roiOffsetX;
+    int lastRoiX = maxX - roiSize / 2;
+
+
+
+    switch (ui->comboBoxRoiShape->currentIndex())
+    {
+    case 1:
+
+        break;
+    default:
+    {
+        int roiNr = 1;
+
+        int roiLeftTopBorderOffset = roiSize / 2 ;
+        int roiRigthBottomBorderOffset =  roiSize - roiSize / 2 - 1 ;
+        for (int y = firstRoiY; y < lastRoiY; y += roiShift)
+        {
+            for (int x = firstRoiX; x < lastRoiX; x += roiShift)
+            {
+
+                rectangle(Mask, Point(x - roiLeftTopBorderOffset, y - roiLeftTopBorderOffset),
+                    Point(x + roiRigthBottomBorderOffset, y + roiRigthBottomBorderOffset),
+                    roiNr,-1);
+                roiNr++;
+            }
+        }
+    }
+        break;
+    }
+    if(ui->checkBoxShowOutput->checkState())
+    {
+        ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -852,6 +927,15 @@ void MainWindow::on_checkBoxAddNoise_stateChanged(int arg1)
 
 void MainWindow::on_doubleSpinBoxGaussNianoiseSigma_valueChanged(double arg1)
 {
+    /*
+    delete rngNormalDist;
+    delete normalDistribution;
+    delete RandomGenNormDistribution;
+
+    rngNormalDist = new boost::minstd_rand(time(0));
+    normalDistribution = new boost::normal_distribution<>(0.0, ui->doubleSpinBoxGaussNianoiseSigma->value());
+    RandomGenNormDistribution = new boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<>>(*rngNormalDist, *normalDistribution);
+    */
     ModeSelect();
 }
 
@@ -882,15 +966,63 @@ void MainWindow::on_comboBoxGradientDirection_currentIndexChanged(int index)
 
 void MainWindow::on_spinBoxUniformNoiseStart_valueChanged(int arg1)
 {
+    delete rngUniformDist;
+    delete uniformDistribution;
+    delete RandomGenUniformDistribution;
+
+    rngUniformDist = new boost::minstd_rand(time(0));
+    uniformDistribution = new boost::uniform_int<>(ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value());
+    RandomGenUniformDistribution = new boost::variate_generator<boost::minstd_rand&, boost::uniform_int<>>(*rngUniformDist, *uniformDistribution);
+
     ModeSelect();
 }
 
 void MainWindow::on_spinBoxUniformNoiseStop_valueChanged(int arg1)
 {
+    delete rngUniformDist;
+    delete uniformDistribution;
+    delete RandomGenUniformDistribution;
+
+    rngUniformDist = new boost::minstd_rand(time(0));
+    uniformDistribution = new boost::uniform_int<>(ui->spinBoxUniformNoiseStart->value(), ui->spinBoxUniformNoiseStop->value());
+    RandomGenUniformDistribution = new boost::variate_generator<boost::minstd_rand&, boost::uniform_int<>>(*rngUniformDist, *uniformDistribution);
+
     ModeSelect();
 }
 
 void MainWindow::on_checkBoxAddUniformNoise_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxRicianS_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxAddRician_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxPlainImage_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxRoiSize_valueChanged(int arg1)
+{
+    ui->spinBoxRoiShift->setMinimum(ui->spinBoxRoiSize->value());
+    ui->spinBoxRoiOffset->setMinimum( ui->spinBoxRoiSize->value()/2);
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxRoiOffset_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxRoiShift_valueChanged(const QString &arg1)
 {
     ModeSelect();
 }

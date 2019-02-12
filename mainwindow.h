@@ -50,8 +50,13 @@ public:
     double minIm;
     double maxIm;
 
+    boost::minstd_rand* rngNormalDist;
+    boost::normal_distribution<>* normalDistribution;
+    boost::variate_generator<boost::minstd_rand&, boost::normal_distribution<>>* RandomGenNormDistribution;
 
-
+    boost::minstd_rand* rngUniformDist;
+    boost::uniform_int<>* uniformDistribution;
+    boost::variate_generator<boost::minstd_rand&, boost::uniform_int<>>* RandomGenUniformDistribution;
 
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
@@ -65,6 +70,7 @@ public:
     void TiffRoiFromRed();
     void ImageResize();
     void ImageLinearOperation();
+    void CreateROI();
     //void GetDisplayParams(Mat ImIn, double maxIm, double minIm);
 
 private slots:
@@ -135,6 +141,18 @@ private slots:
     void on_spinBoxUniformNoiseStop_valueChanged(int arg1);
 
     void on_checkBoxAddUniformNoise_toggled(bool checked);
+
+    void on_doubleSpinBoxRicianS_valueChanged(double arg1);
+
+    void on_checkBoxAddRician_toggled(bool checked);
+
+    void on_checkBoxPlainImage_toggled(bool checked);
+
+    void on_spinBoxRoiSize_valueChanged(int arg1);
+
+    void on_spinBoxRoiOffset_valueChanged(int arg1);
+
+    void on_spinBoxRoiShift_valueChanged(const QString &arg1);
 
 private:
     Ui::MainWindow *ui;

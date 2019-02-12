@@ -34,10 +34,13 @@ SOURCES += \
 
 HEADERS += \
         mainwindow.h \
-         ../../ProjectsLib/LibMarcin/NormalizationLib.h \
-         ../../ProjectsLib/LibMarcin/DispLib.h \
-         ../../ProjectsLib/LibMarcin/StringFcLib.h \
-    ../../ProjectsLib/LibMarcin/histograms.h
+        ../../ProjectsLib/LibMarcin/NormalizationLib.h \
+        ../../ProjectsLib/LibMarcin/DispLib.h \
+        ../../ProjectsLib/LibMarcin/StringFcLib.h \
+        ../../ProjectsLibForein/LibPMS/mazdadummy.h \
+        ../../ProjectsLibForein/LibPMS/mazdaroi.h \
+        ../../ProjectsLibForein/LibPMS/mazdaroiio.h \
+        ../../ProjectsLib/LibMarcin/histograms.h
 
 FORMS += \
         mainwindow.ui
@@ -46,6 +49,7 @@ win32: INCLUDEPATH += C:\opencv\build\include\
 win32: INCLUDEPATH += C:\boost_1_66_0\
 win32: INCLUDEPATH += ..\..\ProjectsLib\LibMarcin\
 win32: INCLUDEPATH += C:\LibTiff\
+win32: INCLUDEPATH += ../../ProjectsLibForein/LibPMS/
 
 # this is for debug
 win32: LIBS += -LC:/opencv/build/x64/vc15/lib/
