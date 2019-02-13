@@ -669,6 +669,8 @@ void MainWindow::CreateROI()
     int maxX = ImIn.cols;
     int maxY = ImIn.rows;
 
+    int maxXY = maxX * maxY;
+
     int roiOffsetX = ui->spinBoxRoiOffset->value();
     int roiOffsetY = ui->spinBoxRoiOffset->value();
 
@@ -689,28 +691,99 @@ void MainWindow::CreateROI()
 
         break;
     default:
-    {
-        int roiNr = 1;
-
-        int roiLeftTopBorderOffset = roiSize / 2 ;
-        int roiRigthBottomBorderOffset =  roiSize - roiSize / 2 - 1 ;
-        for (int y = firstRoiY; y < lastRoiY; y += roiShift)
         {
-            for (int x = firstRoiX; x < lastRoiX; x += roiShift)
+            int roiNr = 1;
+            int skip = 0;
+            int roiLeftTopBorderOffset = roiSize / 2 ;
+            int roiRigthBottomBorderOffset =  roiSize - roiSize / 2 - 1 ;
+            for (int y = firstRoiY; y < lastRoiY; y += roiShift)
             {
-
-                rectangle(Mask, Point(x - roiLeftTopBorderOffset, y - roiLeftTopBorderOffset),
-                    Point(x + roiRigthBottomBorderOffset, y + roiRigthBottomBorderOffset),
-                    roiNr,-1);
-                roiNr++;
+                for (int x = firstRoiX; x < lastRoiX; x += roiShift)
+                {
+                    if(ui->checkBoxReducedROI->checkState())
+                    {
+                        if (skip <= 0)
+                            skip = ui->spinBoxSkipCount->value();
+                        else
+                        {
+                            skip--;
+                            continue;
+                        }
+                    }
+                    rectangle(Mask, Point(x - roiLeftTopBorderOffset, y - roiLeftTopBorderOffset),
+                        Point(x + roiRigthBottomBorderOffset, y + roiRigthBottomBorderOffset),
+                        roiNr,-1);
+                    roiNr++;
+                }
             }
         }
-    }
         break;
     }
+    int *ROISizes = new int[65535];
+    for(int i = 0; i < 65535; i++)
+    {
+        ROISizes[i] = 0;
+    }
+    uint16_t maxRoiNr = 0;
+    uint16_t *wMask = (uint16_t *)Mask.data;
+    for(int i = 0; i < maxXY; i++)
+    {
+        uint16_t roiNr = *wMask;
+        ROISizes[roiNr]++;
+        if(maxRoiNr < roiNr)
+        {
+            maxRoiNr = roiNr;
+        }
+        wMask++;
+    }
+    ui->textEditOut->append("Max ROI Nr "+QString::number(maxRoiNr));
     if(ui->checkBoxShowOutput->checkState())
     {
         ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
+    }
+    path fileToOpen(FileName);
+    string RoiName = fileToOpen.stem().string();
+    if(ui->checkBoxSaveRoi->checkState())
+    {
+        vector <MR2DType*> ROIVect;
+        int begin[MR2DType::Dimensions];
+        int end[MR2DType::Dimensions];
+        begin[0] = 0;
+        begin[1] = 0;
+        end[0] = maxX-1;
+        end[1] = maxY-1;
+
+        MR2DType *ROI;
+
+        for(int roiNr = 1; roiNr <=maxRoiNr; roiNr++)
+        {
+            ROI = new MR2DType(begin, end);
+
+            MazdaRoiIterator<MR2DType> iteratorKL(ROI);
+            wMask = (uint16_t *)Mask.data;
+            while(! iteratorKL.IsBehind())
+            {
+                if (*wMask == roiNr)
+                    iteratorKL.SetPixel();
+                ++iteratorKL;
+                wMask++;
+            }
+
+            ROI->SetName(RoiName);
+            ROI->SetColor(RegColorsRGB[(roiNr-1)%16]);
+
+            ROIVect.push_back(ROI);
+        }
+
+        path fileToSave = OutFolder;
+        fileToSave.append(RoiName + ".roi");
+
+        MazdaRoiIO<MR2DType>::Write(fileToSave.string(), &ROIVect, NULL);
+        while(ROIVect.size() > 0)
+        {
+             delete ROIVect.back();
+             ROIVect.pop_back();
+        }
     }
 }
 
@@ -1023,6 +1096,21 @@ void MainWindow::on_spinBoxRoiOffset_valueChanged(int arg1)
 }
 
 void MainWindow::on_spinBoxRoiShift_valueChanged(const QString &arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxSkipCount_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxReducedROI_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxSaveRoi_toggled(bool checked)
 {
     ModeSelect();
 }

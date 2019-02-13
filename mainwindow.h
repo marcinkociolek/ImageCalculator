@@ -154,6 +154,12 @@ private slots:
 
     void on_spinBoxRoiShift_valueChanged(const QString &arg1);
 
+    void on_spinBoxSkipCount_valueChanged(int arg1);
+
+    void on_checkBoxReducedROI_toggled(bool checked);
+
+    void on_checkBoxSaveRoi_toggled(bool checked);
+
 private:
     Ui::MainWindow *ui;
 
