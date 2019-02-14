@@ -475,9 +475,7 @@ void MainWindow::ImageLinearOperation()
         ui->textEditOut->append("Empty Image");
         return;
     }
-
     ImOut.release();
-
     Mat ImIn32S;
 
     if(ui->checkBoxPlainImage->checkState())
@@ -497,8 +495,7 @@ void MainWindow::ImageLinearOperation()
         ImInHist.Release();
     }
 
-    ImOut = ImIn32S + (int32_t)round(ui->doubleSpinBoxIntOffset->value());
-
+    ImOut = ImIn32S;
     Mat ImNoise;
 
     if(ui->checkBoxAddNoise->checkState())
@@ -527,15 +524,85 @@ void MainWindow::ImageLinearOperation()
             Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                               ui->spinBoxHistScaleCoef->value(),
                                               ui->spinBoxHistBarWidth->value());
-            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
             imshow("Intensity histogram Noise",HistPlot);
 
             IntensityHist.Release();
         }
 
         ImOut += ImNoise;
+        ImNoise.release();
+    }
+    if(ui->checkBoxAddUniformNoise->checkState())
+    {
+        ImNoise = Mat::zeros(ImIn.size(), CV_32S);
+
+        int32_t *wImNoise = (int32_t *)ImNoise.data;
+        int maxX = ImNoise.cols;
+        int maxY = ImNoise.rows;
+        int maxXY = maxX * maxY;
+        for(int i = 0; i < maxXY; i++)
+        {
+                *wImNoise = RandomGenUniformDistribution->operator()();
+                wImNoise ++;
+
+        }
+
+        if(ui->checkBoxShowHist->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat32S(ImNoise);
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            imshow("Intensity histogram Noise",HistPlot);
+
+            IntensityHist.Release();
+        }
+        ImOut += ImNoise;
+        ImNoise.release();
     }
 
+
+    if(ui->checkBoxAddRician->checkState())
+    {
+
+        double ricianS = ui->doubleSpinBoxRicianS->value();
+        Mat ImTemp;
+        ImOut.copyTo(ImTemp);
+
+        int32_t *wImOut = (int32_t *)ImOut.data;
+        int maxX = ImOut.cols;
+        int maxY = ImOut.rows;
+        for(int y = 0; y < maxY; y++)
+        {
+            for(int x = 0; x < maxX; x++)
+            {
+                double valIm = *wImOut;
+                double valRNG1 =  RandomGenNormDistribution->operator()() * ricianS  + valIm;
+                double valRNG2 =  RandomGenNormDistribution->operator()() * ricianS ;
+                double valOut = round(sqrt(valRNG1 * valRNG1 + valRNG2 * valRNG2));
+                *wImOut = valOut;
+                wImOut ++;
+            }
+        }
+
+        Mat ImNoise = ImOut - ImTemp;
+        ImTemp.release();
+        if(ui->checkBoxShowHist->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat32S(ImNoise);
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            imshow("Intensity histogram Noise",HistPlot);
+
+            IntensityHist.Release();
+        }
+        ImNoise.release();
+    }
 
     if(ui->checkBoxAddGradient->checkState())
     {
@@ -566,85 +633,19 @@ void MainWindow::ImageLinearOperation()
         }
     }
 
-    if(ui->checkBoxAddRician->checkState())
-    {
-
-        double ricianS = ui->doubleSpinBoxRicianS->value();
-        Mat ImTemp;
-        ImOut.copyTo(ImTemp);
-
-        int32_t *wImOut = (int32_t *)ImOut.data;
-        int maxX = ImOut.cols;
-        int maxY = ImOut.rows;
-        for(int y = 0; y < maxY; y++)
-        {
-            for(int x = 0; x < maxX; x++)
-            {
-                double valIm = *wImOut;
-                double valRNG1 =  RandomGenNormDistribution->operator()() * ricianS  + valIm;
-                double valRNG2 =  RandomGenNormDistribution->operator()() * ricianS ;
-                double valOut = round(sqrt(valRNG1 * valRNG1 + valRNG2 * valRNG2));
-                *wImOut = valOut;
-                wImOut ++;
-            }
-        }
-
-        Mat ImNoise = ImOut - ImTemp;
-        if(ui->checkBoxShowHist->checkState())
-        {
-            HistogramInteger IntensityHist;
-
-            IntensityHist.FromMat32S(ImNoise);
-            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
-                                              ui->spinBoxHistScaleCoef->value(),
-                                              ui->spinBoxHistBarWidth->value());
-            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
-            imshow("Intensity histogram Noise",HistPlot);
-
-            IntensityHist.Release();
-        }
+    ImOut = ImOut + (int32_t)round(ui->doubleSpinBoxIntOffset->value());
 
 
-    }
-
-    if(ui->checkBoxAddUniformNoise->checkState())
-    {
-        ImNoise = Mat::zeros(ImIn.size(), CV_32S);
-
-        int32_t *wImNoise = (int32_t *)ImNoise.data;
-        int maxX = ImNoise.cols;
-        int maxY = ImNoise.rows;
-        int maxXY = maxX * maxY;
-        for(int i = 0; i < maxXY; i++)
-        {
-                *wImNoise = RandomGenUniformDistribution->operator()();
-                wImNoise ++;
-
-        }
-
-        if(ui->checkBoxShowHist->checkState())
-        {
-            HistogramInteger IntensityHist;
-
-            IntensityHist.FromMat32S(ImNoise);
-            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
-                                              ui->spinBoxHistScaleCoef->value(),
-                                              ui->spinBoxHistBarWidth->value());
-            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
-            imshow("Intensity histogram Noise",HistPlot);
-
-            IntensityHist.Release();
-        }
-        ImOut += ImNoise;
-    }
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
+
+    ImOut.convertTo(ImOut,CV_16U,1.0,0.0);
 
     if(ui->checkBoxShowHist->checkState())
     {
         HistogramInteger IntensityHist;
 
-        IntensityHist.FromMat32S(ImOut);
+        IntensityHist.FromMat16U(ImOut);
         Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                           ui->spinBoxHistScaleCoef->value(),
                                           ui->spinBoxHistBarWidth->value());
@@ -652,6 +653,41 @@ void MainWindow::ImageLinearOperation()
         imshow("Intensity histogram Output",HistPlot);
 
         IntensityHist.Release();
+    }
+    if(ui->checkBoxSaveOutput->checkState())
+    {
+        path fileToOpen(FileName);
+        string OutFileName = fileToOpen.stem().string();
+        path fileToSave = OutFolder;
+        if(ui->checkBoxAddNoise->checkState())
+        {
+            OutFileName += "GN";
+            OutFileName += to_string(ui->doubleSpinBoxGaussNianoiseSigma->value());
+        }
+        if(ui->checkBoxAddRician->checkState())
+        {
+            OutFileName += "RN";
+            OutFileName += ui->doubleSpinBoxRicianS->text().toStdString();
+        }
+        if(ui->checkBoxAddUniformNoise->checkState())
+        {
+            OutFileName += "UN";
+            OutFileName += to_string(ui->spinBoxUniformNoiseStart->value());
+            OutFileName += "-";
+            OutFileName += to_string(ui->spinBoxUniformNoiseStop->value());
+        }
+        if(ui->checkBoxAddGradient->checkState())
+        {
+            OutFileName += "Gr";
+            //OutFileName += to_string(ui->spinBoxGradientNominator->value());
+            //OutFileName += "over";
+            //OutFileName += to_string(ui->spinBoxGradientDenominator->value());
+        }
+
+        OutFileName += ".tiff";
+        fileToSave.append(OutFileName);
+
+        imwrite(fileToSave.string(),ImOut);
     }
 
 
@@ -685,45 +721,49 @@ void MainWindow::CreateROI()
 
 
 
-    switch (ui->comboBoxRoiShape->currentIndex())
-    {
-    case 1:
+    int roiNr = 1;
+    int skip = 0;
 
-        break;
-    default:
+    for (int y = firstRoiY; y < lastRoiY; y += roiShift)
+    {
+        for (int x = firstRoiX; x < lastRoiX; x += roiShift)
         {
-            int roiNr = 1;
-            int skip = 0;
-            int roiLeftTopBorderOffset = roiSize / 2 ;
-            int roiRigthBottomBorderOffset =  roiSize - roiSize / 2 - 1 ;
-            for (int y = firstRoiY; y < lastRoiY; y += roiShift)
+            if(ui->checkBoxReducedROI->checkState())
             {
-                for (int x = firstRoiX; x < lastRoiX; x += roiShift)
+                if (skip <= 0)
+                    skip = ui->spinBoxSkipCount->value();
+                else
                 {
-                    if(ui->checkBoxReducedROI->checkState())
-                    {
-                        if (skip <= 0)
-                            skip = ui->spinBoxSkipCount->value();
-                        else
-                        {
-                            skip--;
-                            continue;
-                        }
-                    }
-                    rectangle(Mask, Point(x - roiLeftTopBorderOffset, y - roiLeftTopBorderOffset),
-                        Point(x + roiRigthBottomBorderOffset, y + roiRigthBottomBorderOffset),
-                        roiNr,-1);
-                    roiNr++;
+                    skip--;
+                    continue;
                 }
             }
+            switch (ui->comboBoxRoiShape->currentIndex())
+            {
+            case 1:
+                circle(Mask,Point(x,y),roiSize/2,roiNr,-1);
+                break;
+            default:
+                int roiLeftTopBorderOffset = roiSize / 2 ;
+                int roiRigthBottomBorderOffset =  roiSize - roiSize / 2 - 1 ;
+                rectangle(Mask, Point(x - roiLeftTopBorderOffset, y - roiLeftTopBorderOffset),
+                    Point(x + roiRigthBottomBorderOffset, y + roiRigthBottomBorderOffset),
+                    roiNr,-1);
+
+                break;
+            }
+            roiNr++;
         }
-        break;
     }
+
+
+
     int *ROISizes = new int[65535];
     for(int i = 0; i < 65535; i++)
     {
         ROISizes[i] = 0;
     }
+
     uint16_t maxRoiNr = 0;
     uint16_t *wMask = (uint16_t *)Mask.data;
     for(int i = 0; i < maxXY; i++)
@@ -736,13 +776,17 @@ void MainWindow::CreateROI()
         }
         wMask++;
     }
+
     ui->textEditOut->append("Max ROI Nr "+QString::number(maxRoiNr));
+
     if(ui->checkBoxShowOutput->checkState())
     {
         ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
     }
+
     path fileToOpen(FileName);
     string RoiName = fileToOpen.stem().string();
+
     if(ui->checkBoxSaveRoi->checkState())
     {
         vector <MR2DType*> ROIVect;
@@ -776,7 +820,21 @@ void MainWindow::CreateROI()
         }
 
         path fileToSave = OutFolder;
-        fileToSave.append(RoiName + ".roi");
+        switch(ui->comboBoxRoiShape->currentIndex())
+        {
+        case 1:
+            RoiName += "Cir";
+            break;
+        default:
+            RoiName += "Rct";
+            break;
+        }
+
+        RoiName += to_string(ui->spinBoxRoiSize->value());
+        RoiName += "Cnt";
+        RoiName += to_string(maxRoiNr);
+        RoiName +=  ".roi";
+        fileToSave.append(RoiName);
 
         MazdaRoiIO<MR2DType>::Write(fileToSave.string(), &ROIVect, NULL);
         while(ROIVect.size() > 0)
