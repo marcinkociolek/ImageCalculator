@@ -457,6 +457,9 @@
       <number>5</number>
      </property>
      <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
       <number>4</number>
      </property>
     </widget>
@@ -619,6 +622,9 @@
       <property name="decimals">
        <number>0</number>
       </property>
+      <property name="minimum">
+       <double>-65536.000000000000000</double>
+      </property>
       <property name="maximum">
        <double>65536.000000000000000</double>
       </property>
@@ -638,11 +644,14 @@
         <height>22</height>
        </rect>
       </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="minimum">
-       <double>0.010000000000000</double>
+       <double>0.000000000000000</double>
       </property>
       <property name="maximum">
        <double>1024.000000000000000</double>
@@ -699,11 +708,14 @@
         <height>22</height>
        </rect>
       </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
       </property>
       <property name="prefix">
-       <string>   </string>
+       <string/>
       </property>
       <property name="decimals">
        <number>1</number>
@@ -731,22 +743,6 @@
        <string>Add Gradient</string>
       </property>
      </widget>
-     <widget class="QSpinBox" name="spinBoxGradientNominator">
-      <property name="geometry">
-       <rect>
-        <x>120</x>
-        <y>150</y>
-        <width>43</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="minimum">
-       <number>1</number>
-      </property>
-     </widget>
      <widget class="QComboBox" name="comboBoxGradientDirection">
       <property name="geometry">
        <rect>
@@ -755,22 +751,6 @@
         <width>51</width>
         <height>22</height>
        </rect>
-      </property>
-     </widget>
-     <widget class="QSpinBox" name="spinBoxGradientDenominator">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>150</y>
-        <width>43</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-      <property name="minimum">
-       <number>1</number>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBoxAddRician">
@@ -794,6 +774,9 @@
         <width>71</width>
         <height>22</height>
        </rect>
+      </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -885,6 +868,56 @@
       </property>
       <property name="text">
        <string>Plain Image</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="doubleSpinBoxGradNominator">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>150</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="maximum">
+       <double>10.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>0.250000000000000</double>
+      </property>
+      <property name="value">
+       <double>0.500000000000000</double>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="doubleSpinBoxGradDenominator">
+      <property name="geometry">
+       <rect>
+        <x>160</x>
+        <y>150</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="locale">
+       <locale language="English" country="UnitedStates"/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+      <property name="maximum">
+       <double>10.000000000000000</double>
+      </property>
+      <property name="singleStep">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="value">
+       <double>1.000000000000000</double>
       </property>
      </widget>
     </widget>

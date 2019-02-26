@@ -273,6 +273,8 @@ void MainWindow::OpenImageFolder()
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ModeSelect()
 {
+    if(!ready)
+        return;
     ReadImage();
     switch(operationMode)
     {
@@ -479,7 +481,7 @@ void MainWindow::ImageLinearOperation()
     Mat ImIn32S;
 
     if(ui->checkBoxPlainImage->checkState())
-        ImIn32S = Mat::ones(ImIn.size(), CV_32S) * (int32_t)round(ui->doubleSpinBoxIntOffset->value());
+        ImIn32S = Mat::ones(ImIn.size(), CV_32S)*(int32_t)(ui->doubleSpinBoxIntensityScale->value());
     else
         ImIn.convertTo(ImIn32S,CV_32S,ui->doubleSpinBoxIntensityScale->value(),0);
 
@@ -578,7 +580,7 @@ void MainWindow::ImageLinearOperation()
         {
             for(int x = 0; x < maxX; x++)
             {
-                double valIm = *wImOut;
+                double valIm = (double)*wImOut;
                 double valRNG1 =  RandomGenNormDistribution->operator()() * ricianS  + valIm;
                 double valRNG2 =  RandomGenNormDistribution->operator()() * ricianS ;
                 double valOut = round(sqrt(valRNG1 * valRNG1 + valRNG2 * valRNG2));
@@ -613,20 +615,24 @@ void MainWindow::ImageLinearOperation()
         {
             for(int x = 0; x < maxX; x++)
             {
-                int val;
+                double val;
                 switch(ui->comboBoxGradientDirection->currentIndex())
                 {
                 case 1:
-                    val = y * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    val = y * ui->doubleSpinBoxGradNominator->value()/ui->doubleSpinBoxGradDenominator->value();
                     break;
                 case 2:
-                    val = (x + y) * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    val = (x + y) * ui->doubleSpinBoxGradNominator->value()/ui->doubleSpinBoxGradDenominator->value();
                     break;
                 default:
-                    val = x * ui->spinBoxGradientNominator->value()/ui->spinBoxGradientDenominator->value();
+                    val = x * ui->doubleSpinBoxGradNominator->value()/ui->doubleSpinBoxGradDenominator->value();
                     break;
                 }
 
+                if(val < 0.0)
+                    val = 0.0;
+                if(val > 65535.0)
+                    val = 65535.0;
                 *wImOut += (int32_t)val;
                 wImOut ++;
             }
@@ -636,10 +642,10 @@ void MainWindow::ImageLinearOperation()
     ImOut = ImOut + (int32_t)round(ui->doubleSpinBoxIntOffset->value());
 
 
+    ImOut.convertTo(ImOut,CV_16U,1.0,0.0);
+
     if(ui->checkBoxShowOutput->checkState())
         ShowsScaledImage(ImOut, "Output Image", displayScale,ui->comboBoxDisplayRange->currentIndex());
-
-    ImOut.convertTo(ImOut,CV_16U,1.0,0.0);
 
     if(ui->checkBoxShowHist->checkState())
     {
@@ -662,7 +668,7 @@ void MainWindow::ImageLinearOperation()
         if(ui->checkBoxAddNoise->checkState())
         {
             OutFileName += "GN";
-            OutFileName += to_string(ui->doubleSpinBoxGaussNianoiseSigma->value());
+            OutFileName += ui->doubleSpinBoxGaussNianoiseSigma->text().toStdString();
         }
         if(ui->checkBoxAddRician->checkState())
         {
@@ -1072,20 +1078,18 @@ void MainWindow::on_doubleSpinBoxGaussNianoiseSigma_valueChanged(double arg1)
 
 void MainWindow::on_checkBoxAddNoise_toggled(bool checked)
 {
+    /*
+    ready = 0;
+    ui->checkBoxAddRician->setCheckState(Qt::Unchecked);
+    ui->checkBoxAddUniformNoise->setCheckState(Qt::Unchecked);
+    ready = 1;
+    if(ui->checkBoxAddUniformNoise->checkState())
+        ui->checkBoxAddUniformNoise->setCheckState(Qt::Checked);
+    */
     ModeSelect();
 }
 
 void MainWindow::on_checkBoxAddGradient_toggled(bool checked)
-{
-    ModeSelect();
-}
-
-void MainWindow::on_spinBoxGradientNominator_valueChanged(int arg1)
-{
-    ModeSelect();
-}
-
-void MainWindow::on_spinBoxGradientDenominator_valueChanged(int arg1)
 {
     ModeSelect();
 }
@@ -1123,6 +1127,12 @@ void MainWindow::on_spinBoxUniformNoiseStop_valueChanged(int arg1)
 
 void MainWindow::on_checkBoxAddUniformNoise_toggled(bool checked)
 {
+    /*
+    ready = 0;
+    ui->checkBoxAddRician->setCheckState(Qt::Unchecked);
+    ui->checkBoxAddNoise->setCheckState(Qt::Unchecked);
+    ready = 1;
+    */
     ModeSelect();
 }
 
@@ -1133,6 +1143,12 @@ void MainWindow::on_doubleSpinBoxRicianS_valueChanged(double arg1)
 
 void MainWindow::on_checkBoxAddRician_toggled(bool checked)
 {
+    /*
+    ready = 0;
+    ui->checkBoxAddNoise->setCheckState(Qt::Unchecked);
+    ui->checkBoxAddUniformNoise->setCheckState(Qt::Unchecked);
+    ready = 1;
+    */
     ModeSelect();
 }
 
@@ -1143,8 +1159,10 @@ void MainWindow::on_checkBoxPlainImage_toggled(bool checked)
 
 void MainWindow::on_spinBoxRoiSize_valueChanged(int arg1)
 {
+
     ui->spinBoxRoiShift->setMinimum(ui->spinBoxRoiSize->value());
     ui->spinBoxRoiOffset->setMinimum( ui->spinBoxRoiSize->value()/2);
+
     ModeSelect();
 }
 
@@ -1169,6 +1187,21 @@ void MainWindow::on_checkBoxReducedROI_toggled(bool checked)
 }
 
 void MainWindow::on_checkBoxSaveRoi_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxIntensityScale_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxGradDenominator_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxGradNominator_valueChanged(double arg1)
 {
     ModeSelect();
 }

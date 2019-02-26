@@ -130,10 +130,6 @@ private slots:
 
     void on_checkBoxAddGradient_toggled(bool checked);
 
-    void on_spinBoxGradientNominator_valueChanged(int arg1);
-
-    void on_spinBoxGradientDenominator_valueChanged(int arg1);
-
     void on_comboBoxGradientDirection_currentIndexChanged(int index);
 
     void on_spinBoxUniformNoiseStart_valueChanged(int arg1);
@@ -159,6 +155,12 @@ private slots:
     void on_checkBoxReducedROI_toggled(bool checked);
 
     void on_checkBoxSaveRoi_toggled(bool checked);
+
+    void on_doubleSpinBoxIntensityScale_valueChanged(double arg1);
+
+    void on_doubleSpinBoxGradDenominator_valueChanged(double arg1);
+
+    void on_doubleSpinBoxGradNominator_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;
