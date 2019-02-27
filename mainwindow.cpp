@@ -790,6 +790,21 @@ void MainWindow::CreateROI()
         ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
     }
 
+    ui->spinBoxRoiNr->setMaximum(maxRoiNr);
+    if(ui->checkBoxShowHist->checkState())
+    {
+        ImIn.convertTo(ImOut,CV_16U);
+        HistogramInteger IntensityHist;
+
+        IntensityHist.FromMat16U(ImOut,Mask,ui->spinBoxRoiNr->value());
+        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                          ui->spinBoxHistScaleCoef->value(),
+                                          ui->spinBoxHistBarWidth->value());
+        //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+        imshow("Intensity histogram Output",HistPlot);
+
+        IntensityHist.Release();
+    }
     path fileToOpen(FileName);
     string RoiName = fileToOpen.stem().string();
 
@@ -1202,6 +1217,11 @@ void MainWindow::on_doubleSpinBoxGradDenominator_valueChanged(double arg1)
 }
 
 void MainWindow::on_doubleSpinBoxGradNominator_valueChanged(double arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxRoiNr_valueChanged(int arg1)
 {
     ModeSelect();
 }
