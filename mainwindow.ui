@@ -1098,6 +1098,41 @@
        <string>ROI# </string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkBoxShowNormalisedROI">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>70</y>
+        <width>141</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show normalised ROI</string>
+      </property>
+     </widget>
+     <widget class="QDoubleSpinBox" name="doubleSpinBoxROIScale">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>100</y>
+        <width>81</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="prefix">
+       <string>ROI scale </string>
+      </property>
+      <property name="decimals">
+       <number>0</number>
+      </property>
+      <property name="minimum">
+       <double>1.000000000000000</double>
+      </property>
+      <property name="maximum">
+       <double>5.000000000000000</double>
+      </property>
+     </widget>
     </widget>
    </widget>
   </widget>

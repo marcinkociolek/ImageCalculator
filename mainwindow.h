@@ -66,6 +66,7 @@ public:
     void OpenImageFolder();
     void ReadImage();
     void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale, int dispMode = 0);
+    void ShowsScaledImage(cv::Mat Im, cv::Mat Mask, std::string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode );
     void ModeSelect();
     void TiffRoiFromRed();
     void ImageResize();
@@ -163,6 +164,10 @@ private slots:
     void on_doubleSpinBoxGradNominator_valueChanged(double arg1);
 
     void on_spinBoxRoiNr_valueChanged(int arg1);
+
+    void on_checkBoxShowNormalisedROI_toggled(bool checked);
+
+    void on_doubleSpinBoxROIScale_valueChanged(double arg1);
 
 private:
     Ui::MainWindow *ui;

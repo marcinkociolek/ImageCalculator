@@ -401,6 +401,56 @@ void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,
 
 }
 //------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::ShowsScaledImage(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
+{
+    if(Im.empty())
+    {
+        ui->textEditOut->append("Empty Image to show");
+        return;
+    }
+
+    Mat ImToShow;
+
+    double minDisp = 0.0;
+    double maxDisp = 255.0;
+
+    switch(dispMode)
+    {
+    case 1:
+        minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+
+        break;
+    case 2:
+        NormParamsMinMax(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    default:
+        break;
+    }
+
+    if(dispMode > 0)
+    {
+        Mat ImF;
+        Im.convertTo(ImF, CV_64F);
+        ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
+        ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
+
+    }
+    else
+        ImToShow = Im.clone();
+
+    if (dispScale != 1.0)
+        cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
+    imshow(ImWindowName, ImToShow);
+
+}
+//------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::TiffRoiFromRed()
 {
     if(ImIn.empty())
@@ -726,7 +776,7 @@ void MainWindow::CreateROI()
     int lastRoiX = maxX - roiSize / 2;
 
 
-
+    //int roiNrSel =
     int roiNr = 1;
     int skip = 0;
 
@@ -805,6 +855,43 @@ void MainWindow::CreateROI()
 
         IntensityHist.Release();
     }
+
+    if(ui->checkBoxShowNormalisedROI->checkState())
+    {
+        uint16_t roiNr = (uint16_t)ui->spinBoxRoiNr->value();
+        int roiMaxX = 0;
+        int roiMinX = maxX;
+        int roiMaxY = 0;
+        int roiMinY = maxY;
+        wMask = (uint16_t *)Mask.data;
+        for (int y = 0; y < maxY; y++)
+        {
+            for (int x = 0; x < maxX; x++)
+            {
+                if(*wMask == roiNr)
+                {
+                    if(roiMaxX < x)
+                        roiMaxX = x;
+                    if(roiMinX > x)
+                        roiMinX = x;
+                    if(roiMaxY < y)
+                        roiMaxY = y;
+                    if(roiMinY > y)
+                        roiMinY = y;
+                }
+                wMask++;
+            }
+        }
+        Mat SmallIm,SmallMask;
+        ImIn(Rect(roiMinX,roiMinY, roiMaxX, roiMaxY)).copyTo(SmallIm);
+        Mask(Rect(roiMinX,roiMinY, roiMaxX, roiMaxY)).copyTo(SmallMask);
+
+        ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
+                         //(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
+    }
+
+
+
     path fileToOpen(FileName);
     string RoiName = fileToOpen.stem().string();
 
@@ -1222,6 +1309,16 @@ void MainWindow::on_doubleSpinBoxGradNominator_valueChanged(double arg1)
 }
 
 void MainWindow::on_spinBoxRoiNr_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxShowNormalisedROI_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_doubleSpinBoxROIScale_valueChanged(double arg1)
 {
     ModeSelect();
 }
