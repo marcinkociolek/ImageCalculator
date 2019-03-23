@@ -446,7 +446,7 @@ void MainWindow::ShowsScaledImage(Mat Im, Mat Mask, string ImWindowName, double 
         ImToShow = Im.clone();
 
     if (dispScale != 1.0)
-        cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
+        cv::resize(ImToShow,ImToShow,Size(), dispScale, dispScale, INTER_AREA);
     imshow(ImWindowName, ImToShow);
 
 }
@@ -883,8 +883,8 @@ void MainWindow::CreateROI()
             }
         }
         Mat SmallIm,SmallMask;
-        ImIn(Rect(roiMinX,roiMinY, roiMaxX, roiMaxY)).copyTo(SmallIm);
-        Mask(Rect(roiMinX,roiMinY, roiMaxX, roiMaxY)).copyTo(SmallMask);
+        ImIn(Rect(roiMinX,roiMinY, roiMaxX-roiMinX+1, roiMaxY-roiMinY+1)).copyTo(SmallIm);
+        Mask(Rect(roiMinX,roiMinY, roiMaxX-roiMinX+1, roiMaxY-roiMinY+1)).copyTo(SmallMask);
 
         ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
                          //(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
