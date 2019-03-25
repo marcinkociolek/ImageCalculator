@@ -160,6 +160,7 @@ bool GetTiffProperties(string FileName, float &xRes, float &yRes)
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------------------
 
@@ -448,7 +449,105 @@ void MainWindow::ShowsScaledImage(Mat Im, Mat Mask, string ImWindowName, double 
     if (dispScale != 1.0)
         cv::resize(ImToShow,ImToShow,Size(), dispScale, dispScale, INTER_AREA);
     imshow(ImWindowName, ImToShow);
+}
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::SaveScaledImage(Mat Im, string FileName, double dispScale,int dispMode)
+{
+    if(Im.empty())
+    {
+        ui->textEditOut->append("Empty Image to show");
+        return;
+    }
 
+    Mat ImToShow;
+
+    double minDisp = 0.0;
+    double maxDisp = 255.0;
+
+    switch(dispMode)
+    {
+    case 1:
+        minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+
+        break;
+    case 2:
+        NormParamsMinMax(Im, &maxDisp, &minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, &maxDisp, &minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, &maxDisp, &minDisp);
+        break;
+    default:
+        break;
+    }
+
+    if(dispMode > 0)
+    {
+        Mat ImF;
+        Im.convertTo(ImF, CV_64F);
+        ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
+        ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
+
+    }
+    else
+        ImToShow = Im.clone();
+
+    if (dispScale != 1.0)
+        cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
+    imwrite(FileName, ImToShow);
+
+}
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::SaveScaledImage(Mat Im, Mat Mask, string FileName, double dispScale, uint16_t RoiNr, int dispMode )
+{
+    if(Im.empty())
+    {
+        ui->textEditOut->append("Empty Image to savew");
+        return;
+    }
+
+    Mat ImToShow;
+
+    double minDisp = 0.0;
+    double maxDisp = 255.0;
+
+    switch(dispMode)
+    {
+    case 1:
+        minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+
+        break;
+    case 2:
+        NormParamsMinMax(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, Mask, RoiNr, &maxDisp, &minDisp);
+        break;
+    default:
+        break;
+    }
+
+    if(dispMode > 0)
+    {
+        Mat ImF;
+        Im.convertTo(ImF, CV_64F);
+        ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
+        ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
+
+    }
+    else
+        ImToShow = Im.clone();
+
+    if (dispScale != 1.0)
+        cv::resize(ImToShow,ImToShow,Size(), dispScale, dispScale, INTER_AREA);
+    imwrite(FileName, ImToShow);
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::TiffRoiFromRed()
@@ -840,6 +939,30 @@ void MainWindow::CreateROI()
         ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
     }
 
+    if(ui->checkBoxSaveROIbmp->checkState())
+    {
+        path fileToSave = OutFolder;
+        string RoiName = "ROI_";
+        switch(ui->comboBoxRoiShape->currentIndex())
+        {
+        case 1:
+            RoiName += "Cir";
+            break;
+        default:
+            RoiName += "Rct";
+            break;
+        }
+
+        RoiName += to_string(ui->spinBoxRoiSize->value());
+        RoiName += "Cnt";
+        RoiName += to_string(maxRoiNr);
+        RoiName +=  ".bmp";
+        fileToSave.append(RoiName);
+        imwrite(fileToSave.string(),ShowRegion(Mask));
+        //SaveScaledImage(ShowRegion(Mask), fileToSave.string(), ui->doubleSpinBoxROIScale->value(), ui->comboBoxDisplayRange->currentIndex());
+    }
+
+
     ui->spinBoxRoiNr->setMaximum(maxRoiNr);
     if(ui->checkBoxShowHist->checkState())
     {
@@ -856,7 +979,7 @@ void MainWindow::CreateROI()
         IntensityHist.Release();
     }
 
-    if(ui->checkBoxShowNormalisedROI->checkState())
+    if(ui->checkBoxShowNormalisedROI->checkState() || ui->checkBoxSaveNormalisedRoiImage->checkState())
     {
         uint16_t roiNr = (uint16_t)ui->spinBoxRoiNr->value();
         int roiMaxX = 0;
@@ -886,8 +1009,32 @@ void MainWindow::CreateROI()
         ImIn(Rect(roiMinX,roiMinY, roiMaxX-roiMinX+1, roiMaxY-roiMinY+1)).copyTo(SmallIm);
         Mask(Rect(roiMinX,roiMinY, roiMaxX-roiMinX+1, roiMaxY-roiMinY+1)).copyTo(SmallMask);
 
-        ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
+        if(ui->checkBoxShowNormalisedROI->checkState())
+            ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
                          //(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
+        if(ui->checkBoxSaveNormalisedRoiImage->checkState())
+        {
+            path fileToOpen(FileName);
+            string RoiImName = fileToOpen.stem().string();
+
+            path fileToSave = OutFolder;
+            switch(ui->comboBoxRoiShape->currentIndex())
+            {
+            case 1:
+                RoiImName += "Cir";
+                break;
+            default:
+                RoiImName += "Rct";
+                break;
+            }
+
+            RoiImName += to_string(ui->spinBoxRoiSize->value());
+            RoiImName += "Cnt";
+            RoiImName += to_string(maxRoiNr);
+            RoiImName +=  ".bmp";
+            fileToSave.append(RoiImName);
+            SaveScaledImage(SmallIm, SmallMask, fileToSave.string(), ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex());
+        }
     }
 
 
@@ -951,6 +1098,7 @@ void MainWindow::CreateROI()
              ROIVect.pop_back();
         }
     }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------

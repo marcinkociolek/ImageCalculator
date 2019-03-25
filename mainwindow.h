@@ -67,6 +67,8 @@ public:
     void ReadImage();
     void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale, int dispMode = 0);
     void ShowsScaledImage(cv::Mat Im, cv::Mat Mask, std::string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode );
+    void SaveScaledImage(cv::Mat Im, std::string FileName, double dispScale,int dispMode);
+    void SaveScaledImage(cv::Mat Im, cv::Mat Mask, std::string FileName, double dispScale, uint16_t RoiNr, int dispMode );
     void ModeSelect();
     void TiffRoiFromRed();
     void ImageResize();
