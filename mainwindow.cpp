@@ -1156,12 +1156,12 @@ void MainWindow::CreateROI()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
-void MainWindow::CreateMaZdaScript()
+string MainWindow::CreateMaZdaScript()
 {
     if(ImIn.empty())
     {
         ui->textEditOut->append("Empty Image");
-        return;
+        return "";
     }
     Mat Mask ;
 
@@ -1214,7 +1214,26 @@ void MainWindow::CreateMaZdaScript()
         ShowsScaledImage(ImShow, "Output Image",displayScale);
     }
 
-
+    string out = ui->lineEditMaZdaFileLocation->text().toStdString();
+    out += " -m roi -i ";
+    out += ui->lineEditMaZdaInFilesFolder->text().toStdString();
+    out += ImageFileName.filename().string();
+    out += " -r ";
+    out += ui->lineEditMaZdaInFilesFolder->text().toStdString();
+    out += ui->lineEditMaZdaROIFolder->text().toStdString();
+    out += ImageFileName.stem().string();
+    if (ui->listWidgetImageFiles->currentRow())
+    {
+        out += " -a ";
+    }
+    out += " -o ";
+    out += ui->lineEditMaZdaOutFileName->text().toStdString();
+    if (!ui->listWidgetImageFiles->currentRow())
+    {
+        out += " -f ";
+        out += ui->lineEditMaZdaOptionsFile->text().toStdString();
+    }
+    return out;
 }
 //------------------------------------------------------------------------------------------------------------------------------
 //          Slots
@@ -1583,4 +1602,17 @@ void MainWindow::on_checkBoxShowNormalisedROI_toggled(bool checked)
 void MainWindow::on_doubleSpinBoxROIScale_valueChanged(double arg1)
 {
     ModeSelect();
+}
+
+void MainWindow::on_pushButtonProcessAll_clicked()
+{
+    OutString.clear();
+    OutString = "";
+    int filesCount = ui->listWidgetImageFiles->count();
+    ui->textEditOut->clear();
+    for(int fileNr = 0; fileNr< filesCount; fileNr++)
+    {
+        ui->listWidgetImageFiles->setCurrentRow(fileNr);
+    }
+
 }

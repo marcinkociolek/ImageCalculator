@@ -29,6 +29,9 @@ public:
     boost::filesystem::path OutFolder;
 
     std::string FileName;
+
+    std::string OutString;
+
     cv::Mat ImIn;
     cv::Mat ImOut;
 
@@ -74,7 +77,7 @@ public:
     void ImageResize();
     void ImageLinearOperation();
     void CreateROI();
-    void CreateMaZdaScript();
+    std::string CreateMaZdaScript();
     //void GetDisplayParams(Mat ImIn, double maxIm, double minIm);
 
 private slots:
@@ -171,6 +174,8 @@ private slots:
     void on_checkBoxShowNormalisedROI_toggled(bool checked);
 
     void on_doubleSpinBoxROIScale_valueChanged(double arg1);
+
+    void on_pushButtonProcessAll_clicked();
 
 private:
     Ui::MainWindow *ui;

@@ -463,6 +463,19 @@
       <number>4</number>
      </property>
     </widget>
+    <widget class="QPushButton" name="pushButtonProcessAll">
+     <property name="geometry">
+      <rect>
+       <x>290</x>
+       <y>110</y>
+       <width>80</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Process All</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QTabWidget" name="tabWidgetMode">
     <property name="geometry">
@@ -1187,7 +1200,7 @@
        </rect>
       </property>
      </widget>
-     <widget class="QLineEdit" name="lineEditOutFileName">
+     <widget class="QLineEdit" name="lineEditMaZdaOutFileName">
       <property name="geometry">
        <rect>
         <x>10</x>
