@@ -74,6 +74,7 @@ public:
     void ImageResize();
     void ImageLinearOperation();
     void CreateROI();
+    void CreateMaZdaScript();
     //void GetDisplayParams(Mat ImIn, double maxIm, double minIm);
 
 private slots:

@@ -39,6 +39,58 @@ using namespace cv;
 //------------------------------------------------------------------------------------------------------------------------------
 //          My functions outside the Mainwindow class
 //------------------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
+Mat LoadROI(boost::filesystem::path InputFile,int maxX, int maxY)
+{
+
+    Mat Mask = Mat::zeros(maxY,maxX,CV_16U);
+    unsigned short *wMask;
+
+    vector <MR2DType*> ROIVect;
+
+    if(!exists(InputFile))
+        return Mask;
+
+    ROIVect = MazdaRoiIO<MR2DType>::Read(InputFile.string());
+
+    unsigned int imSize[2];
+    imSize[0] = Mask.rows;
+    imSize[1] = Mask.cols;
+
+    int maxXY = maxX*maxY;
+
+    MazdaRoiResizer<MR2DType> resizer;
+
+    wMask = (unsigned short*)Mask.data;
+    int numRois = ROIVect.size();
+
+    if (numRois > 100)
+        numRois = 100;
+
+
+    for(int i = 0; i < numRois;i++)
+    {
+        if(!ROIVect.at(0)->IsEmpty())
+        {
+            MR2DType *ROI = resizer.Upsize(ROIVect.at(0),imSize);
+            MazdaRoiIterator<MR2DType> iterator(ROI);
+            while(! iterator.IsBehind())
+            {
+                if (iterator.GetPixel())
+                    *wMask = numRois+1;
+                ++iterator;
+                wMask++;
+            }
+            delete ROI;
+        }
+    }
+    while(ROIVect.size() > 0)
+    {
+         delete ROIVect.back();
+         ROIVect.pop_back();
+    }
+    return Mask;
+}
 //------------------------------------------------------------------------------------------------------------------------------
 string InterpolationToString(int interpolationNr)
 {
@@ -291,7 +343,9 @@ void MainWindow::ModeSelect()
     case 3:
         CreateROI();
         break;
-
+    case 4:
+        CreateMaZdaScript();
+        break;
     default:
 
             break;
@@ -1102,6 +1156,66 @@ void MainWindow::CreateROI()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::CreateMaZdaScript()
+{
+    if(ImIn.empty())
+    {
+        ui->textEditOut->append("Empty Image");
+        return;
+    }
+    Mat Mask ;
+
+    int maxX = ImIn.cols;
+    int maxY = ImIn.rows;
+
+    path ROIFile = ImageFolder;
+    path ImageFileName(FileName);
+    ROIFile.append("/" + ui->lineEditMaZdaROIFolder->text().toStdString() + ImageFileName.stem().string() + ".roi");
+
+   // ROIFile
+    if(exists(ROIFile))
+    {
+        Mask =  LoadROI(ROIFile, maxX, maxY);
+
+        ui->textEditOut->append("Valid Roi");
+    }
+    else
+    {
+        ui->textEditOut->append("No Roi For The Frame");
+
+    }
+
+    if(ui->checkBoxShowOutput->checkState())
+    {
+        double minDisp = 0.0;
+        double maxDisp = 255.0;
+
+        switch(ui->comboBoxDisplayRange->currentIndex())
+        {
+        case 1:
+            minDisp = ui->doubleSpinBoxFixMinDisp->value();
+            maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+
+            break;
+        case 2:
+            NormParamsMinMax(ImIn, &maxDisp, &minDisp);
+            break;
+        case 3:
+            NormParamsMeanP3Std(ImIn, &maxDisp, &minDisp);
+            break;
+        case 4:
+            NormParams1to99perc(ImIn, &maxDisp, &minDisp);
+            break;
+        default:
+            break;
+        }
+        Mat ImShowGray = ShowImage16Gray(ImIn,minDisp,maxDisp);
+        Mat ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
+        ShowsScaledImage(ImShow, "Output Image",displayScale);
+    }
+
+
+}
 //------------------------------------------------------------------------------------------------------------------------------
 //          Slots
 //------------------------------------------------------------------------------------------------------------------------------
