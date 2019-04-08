@@ -344,7 +344,7 @@ void MainWindow::ModeSelect()
         CreateROI();
         break;
     case 4:
-        CreateMaZdaScript();
+        OutString += CreateMaZdaScript();
         break;
     default:
 
@@ -1219,20 +1219,28 @@ string MainWindow::CreateMaZdaScript()
     out += ui->lineEditMaZdaInFilesFolder->text().toStdString();
     out += ImageFileName.filename().string();
     out += " -r ";
-    out += ui->lineEditMaZdaInFilesFolder->text().toStdString();
+    //out += ui->lineEditMaZdaInFilesFolder->text().toStdString();
     out += ui->lineEditMaZdaROIFolder->text().toStdString();
     out += ImageFileName.stem().string();
+    out += ".roi";
     if (ui->listWidgetImageFiles->currentRow())
     {
         out += " -a ";
     }
     out += " -o ";
     out += ui->lineEditMaZdaOutFileName->text().toStdString();
+    out += ui->lineEditMaZdaOptionsFile->text().toStdString();
+    out += ".cvs";
+
     if (!ui->listWidgetImageFiles->currentRow())
     {
         out += " -f ";
+        out += ui->lineEditMaZdaOptionsDir->text().toStdString();
         out += ui->lineEditMaZdaOptionsFile->text().toStdString();
+        out += ".";
+        out += ui->lineEditMaZdaOptionsExtension->text().toStdString();
     }
+    out += "\n";
     return out;
 }
 //------------------------------------------------------------------------------------------------------------------------------
@@ -1606,6 +1614,16 @@ void MainWindow::on_doubleSpinBoxROIScale_valueChanged(double arg1)
 
 void MainWindow::on_pushButtonProcessAll_clicked()
 {
+    if (!exists(OutFolder))
+    {
+        ui->textEditOut->append( string("Error" + OutFolder.string() + " does not exists").c_str());
+    }
+    if (!is_directory(OutFolder))
+    {
+        ui->textEditOut->append(QString::fromStdString( string("Error 2" + OutFolder.string() + " is not a directory")));
+    }
+
+
     OutString.clear();
     OutString = "";
     int filesCount = ui->listWidgetImageFiles->count();
@@ -1614,5 +1632,25 @@ void MainWindow::on_pushButtonProcessAll_clicked()
     {
         ui->listWidgetImageFiles->setCurrentRow(fileNr);
     }
+
+    switch(operationMode)
+    {
+    case 4:
+        {
+            path textOutFile = OutFolder;
+            textOutFile.append(ui->lineEditMaZdaScriptFileName->text().toStdString() + "_"+ ui->lineEditMaZdaOptionsFile->text().toStdString()+ ".bat");
+
+            std::ofstream out (textOutFile.string());
+            out << OutString;
+            out.close();
+        }
+        break;
+
+    default:
+
+            break;
+    }
+
+
 
 }

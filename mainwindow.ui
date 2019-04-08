@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>908</width>
-    <height>652</height>
+    <height>661</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -483,7 +483,7 @@
       <x>510</x>
       <y>250</y>
       <width>391</width>
-      <height>301</height>
+      <height>341</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -1187,17 +1187,20 @@
        </rect>
       </property>
       <property name="text">
-       <string>E:\PortableSoft\qmazda1902_win64\</string>
+       <string>E:\PortableSoft\qmazda1902_win64\MzGenerator.exe</string>
       </property>
      </widget>
      <widget class="QLineEdit" name="lineEditMaZdaOptionsFile">
       <property name="geometry">
        <rect>
-        <x>10</x>
+        <x>230</x>
         <y>180</y>
-        <width>371</width>
+        <width>111</width>
         <height>21</height>
        </rect>
+      </property>
+      <property name="text">
+       <string>GLCM_M3</string>
       </property>
      </widget>
      <widget class="QLineEdit" name="lineEditMaZdaOutFileName">
@@ -1205,9 +1208,12 @@
        <rect>
         <x>10</x>
         <y>230</y>
-        <width>113</width>
+        <width>371</width>
         <height>21</height>
        </rect>
+      </property>
+      <property name="text">
+       <string>OutGLCM\Kidneys</string>
       </property>
      </widget>
      <widget class="QLabel" name="labelMaZdaFileLocation">
@@ -1249,7 +1255,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>KidneyFigs\</string>
+       <string>Figs\</string>
       </property>
      </widget>
      <widget class="QLabel" name="labelMaZdaRoiFolder">
@@ -1275,7 +1281,7 @@
        </rect>
       </property>
       <property name="text">
-       <string/>
+       <string>Figs\</string>
       </property>
      </widget>
      <widget class="QLabel" name="labelMaZdaOptionsFile">
@@ -1302,6 +1308,58 @@
       </property>
       <property name="text">
        <string>Out File Name</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelMaZdaScriptFileName">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>260</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Script File Name</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEditMaZdaScriptFileName">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>280</y>
+        <width>371</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Analysis</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEditMaZdaOptionsDir">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>180</y>
+        <width>211</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Opt\</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEditMaZdaOptionsExtension">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>180</y>
+        <width>31</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>txt</string>
       </property>
      </widget>
     </widget>
