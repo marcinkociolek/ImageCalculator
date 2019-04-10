@@ -77,7 +77,7 @@ Mat LoadROI(boost::filesystem::path InputFile,int maxX, int maxY)
             while(! iterator.IsBehind())
             {
                 if (iterator.GetPixel())
-                    *wMask = numRois+1;
+                    *wMask = i+1;
                 ++iterator;
                 wMask++;
             }
@@ -1018,18 +1018,52 @@ void MainWindow::CreateROI()
 
 
     ui->spinBoxRoiNr->setMaximum(maxRoiNr);
-    if(ui->checkBoxShowHist->checkState())
+    if(ui->checkBoxShowHist->checkState()|| ui->checkBoxSaveRoiHistogram->checkState())
     {
         ImIn.convertTo(ImOut,CV_16U);
         HistogramInteger IntensityHist;
 
         IntensityHist.FromMat16U(ImOut,Mask,ui->spinBoxRoiNr->value());
-        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
-                                          ui->spinBoxHistScaleCoef->value(),
-                                          ui->spinBoxHistBarWidth->value());
-        //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
-        imshow("Intensity histogram Output",HistPlot);
 
+        if(ui->checkBoxShowHist->checkState())
+        {
+            Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                              ui->spinBoxHistScaleCoef->value(),
+                                              ui->spinBoxHistBarWidth->value());
+            //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+            imshow("Intensity histogram Output",HistPlot);
+        }
+
+
+        if(ui->checkBoxSaveRoiHistogram->checkState())
+        {
+            path fileToOpen(FileName);
+            string RoiImName = fileToOpen.stem().string();
+
+            path fileToSave = OutFolder;
+            switch(ui->comboBoxRoiShape->currentIndex())
+            {
+            case 1:
+                RoiImName += "Cir";
+                break;
+            default:
+                RoiImName += "Rct";
+                break;
+            }
+
+            RoiImName += to_string(ui->spinBoxRoiSize->value());
+            RoiImName += "Cnt";
+            RoiImName += to_string(maxRoiNr);
+            RoiImName += "Nr";
+            RoiImName += to_string(ui->spinBoxRoiNr->value());
+            RoiImName +=  ".txt";
+            fileToSave.append(RoiImName);
+
+            std::ofstream out (fileToSave.string());
+            out << IntensityHist.GetString();
+            out.close();
+
+        }
         IntensityHist.Release();
     }
 
@@ -1213,6 +1247,20 @@ string MainWindow::CreateMaZdaScript()
         Mat ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
         ShowsScaledImage(ImShow, "Output Image",displayScale);
     }
+    if(ui->checkBoxShowHist->checkState())
+    {
+        ImIn.convertTo(ImOut,CV_16U);
+        HistogramInteger IntensityHist;
+
+        IntensityHist.FromMat16U(ImOut,Mask,2);
+        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                          ui->spinBoxHistScaleCoef->value(),
+                                          ui->spinBoxHistBarWidth->value());
+        //ui->textEditOut->append(QString::fromStdString(IntensityHist.GerString()));
+        imshow("Intensity histogram Output",HistPlot);
+
+        IntensityHist.Release();
+    }
 
     string out = ui->lineEditMaZdaFileLocation->text().toStdString();
     out += " -m roi -i ";
@@ -1232,7 +1280,7 @@ string MainWindow::CreateMaZdaScript()
     out += ui->lineEditMaZdaOptionsFile->text().toStdString();
     out += ".cvs";
 
-    if (!ui->listWidgetImageFiles->currentRow())
+    if (ui->listWidgetImageFiles->currentRow()==0)
     {
         out += " -f ";
         out += ui->lineEditMaZdaOptionsDir->text().toStdString();
@@ -1623,7 +1671,7 @@ void MainWindow::on_pushButtonProcessAll_clicked()
         ui->textEditOut->append(QString::fromStdString( string("Error 2" + OutFolder.string() + " is not a directory")));
     }
 
-
+    ui->listWidgetImageFiles->currentRow()==1;
     OutString.clear();
     OutString = "";
     int filesCount = ui->listWidgetImageFiles->count();
@@ -1653,4 +1701,23 @@ void MainWindow::on_pushButtonProcessAll_clicked()
 
 
 
+}
+
+void MainWindow::on_lineEditMaZdaOptionsFile_returnPressed()
+{
+    ui->listWidgetImageFiles->currentRow()==1;
+    OutString.clear();
+    OutString = "";
+    int filesCount = ui->listWidgetImageFiles->count();
+    ui->textEditOut->clear();
+    for(int fileNr = 0; fileNr< filesCount; fileNr++)
+    {
+        ui->listWidgetImageFiles->setCurrentRow(fileNr);
+    }
+    path textOutFile = OutFolder;
+    textOutFile.append(ui->lineEditMaZdaScriptFileName->text().toStdString() + "_"+ ui->lineEditMaZdaOptionsFile->text().toStdString()+ ".bat");
+
+    std::ofstream out (textOutFile.string());
+    out << OutString;
+    out.close();
 }

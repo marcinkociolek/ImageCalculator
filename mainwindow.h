@@ -177,6 +177,8 @@ private slots:
 
     void on_pushButtonProcessAll_clicked();
 
+    void on_lineEditMaZdaOptionsFile_returnPressed();
+
 private:
     Ui::MainWindow *ui;
 

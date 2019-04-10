@@ -487,7 +487,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1172,6 +1172,19 @@
        <string>Save ROI bmp</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkBoxSaveRoiHistogram">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>120</y>
+        <width>72</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Save ROI Histogram</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
@@ -1213,7 +1226,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>OutGLCM\Kidneys</string>
+       <string>Out\Kidneys</string>
       </property>
      </widget>
      <widget class="QLabel" name="labelMaZdaFileLocation">
