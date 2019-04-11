@@ -185,6 +185,12 @@ private slots:
 
     void on_spinBoxMaxHist_valueChanged(int arg1);
 
+    void on_checkBoxShowBinedROI_toggled(bool checked);
+
+    void on_comboBoxROINorm_currentIndexChanged(int index);
+
+    void on_spinBoxROIBitPerPix_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
 

@@ -234,7 +234,10 @@ Mat CreateNormalisedImage16U(Mat ImIn, double minNorm, double maxNorm, int nrOfB
 
     double maxVal = (double)(nrOfBins-1);
     double offset = minNorm;
-    double coeff = (maxNorm - minNorm) * maxVal;
+    double normRange = maxNorm - minNorm;
+    if(normRange == 0.0)
+        normRange = 1.0;
+    double coeff = maxVal/normRange;
 
     uint16 *wImIn  = (uint16 *)ImIn.data;
     uint16 *wImOut  = (uint16 *)ImOut.data;
@@ -1121,7 +1124,7 @@ void MainWindow::CreateROI()
         IntensityHist.Release();
     }
 
-    if(ui->checkBoxShowNormalisedROI->checkState() || ui->checkBoxSaveNormalisedRoiImage->checkState())
+    if(ui->checkBoxShowNormalisedROI->checkState() || ui->checkBoxSaveNormalisedRoiImage->checkState()||ui->checkBoxShowBinedROI->checkState())
     {
         uint16_t roiNr = (uint16_t)ui->spinBoxRoiNr->value();
         int roiMaxX = 0;
@@ -1155,7 +1158,7 @@ void MainWindow::CreateROI()
             ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
                          //(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
 
-        if(ui->checkBoxShowBinedROI->checkState())
+        if(ui->checkBoxShowBinedROI->checkState()||ui->checkBoxSaveBinnedROIImage->checkState())
         {
 
             Mat ImToShow;
@@ -1188,6 +1191,109 @@ void MainWindow::CreateROI()
 
             imshow("Im Binned", ImToShow);
 
+
+
+            if(ui->checkBoxSaveBinnedROIImage->checkState())
+            {
+                path fileToOpen(FileName);
+                string RoiImName = fileToOpen.stem().string();
+
+                path fileToSave = OutFolder;
+                switch(ui->comboBoxRoiShape->currentIndex())
+                {
+                case 1:
+                    RoiImName += "Cir";
+                    break;
+                default:
+                    RoiImName += "Rct";
+                    break;
+                }
+
+                RoiImName += to_string(ui->spinBoxRoiSize->value());
+                RoiImName += "Cnt";
+                RoiImName += to_string(maxRoiNr);
+                RoiImName += "Nr";
+                RoiImName += to_string(ui->spinBoxRoiNr->value());
+                switch(ui->comboBoxROINorm->currentIndex())
+                {
+                case 1:
+                    RoiImName += "NormMeanPM3STD";
+                    break;
+                case 2:
+                    RoiImName += "Norm1_99Perc";
+                    break;
+                default:
+                    RoiImName += "NormMinMax";
+                    break;
+                }
+                RoiImName += "BpP";
+                RoiImName += to_string(ui->spinBoxROIBitPerPix->value());
+                RoiImName +=  ".bmp";
+                fileToSave.append(RoiImName);
+                SaveScaledImage(SmallIm, SmallMask, fileToSave.string(), ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex());
+            }
+
+            if(ui->checkBoxShowHist->checkState() || ui->checkBoxSaveBinnedROIHist->checkState())
+            {
+                HistogramInteger IntensityHist;
+
+                IntensityHist.FromMat16U(ImBinned,SmallMask,ui->spinBoxRoiNr->value());
+
+                if(ui->checkBoxShowHist->checkState())
+                {
+                    Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                                      ui->spinBoxHistScaleCoef->value(),
+                                                      ui->spinBoxHistBarWidth->value());
+                    imshow("Intensity histogram ROI Binned",HistPlot);
+                }
+
+
+                if(ui->checkBoxSaveBinnedROIHist->checkState())
+                {
+                    path fileToOpen(FileName);
+                    string RoiImName = fileToOpen.stem().string();
+
+                    path fileToSave = OutFolder;
+                    switch(ui->comboBoxRoiShape->currentIndex())
+                    {
+                    case 1:
+                        RoiImName += "Cir";
+                        break;
+                    default:
+                        RoiImName += "Rct";
+                        break;
+                    }
+
+                    RoiImName += to_string(ui->spinBoxRoiSize->value());
+                    RoiImName += "Cnt";
+                    RoiImName += to_string(maxRoiNr);
+                    RoiImName += "Nr";
+                    RoiImName += to_string(ui->spinBoxRoiNr->value());
+                    switch(ui->comboBoxROINorm->currentIndex())
+                    {
+                    case 1:
+                        RoiImName += "NormMeanPM3STD";
+                        break;
+                    case 2:
+                        RoiImName += "Norm1_99Perc";
+                        break;
+                    default:
+                        RoiImName += "NormMinMax";
+                        break;
+                    }
+                    RoiImName += "BpP";
+                    RoiImName += to_string(ui->spinBoxROIBitPerPix->value());
+                    RoiImName +=  ".txt";
+                    fileToSave.append(RoiImName);
+
+                    std::ofstream out (fileToSave.string());
+                    out << IntensityHist.GetString();
+                    out.close();
+
+                }
+                IntensityHist.Release();
+            }
+
         }
 
         if(ui->checkBoxSaveNormalisedRoiImage->checkState())
@@ -1209,6 +1315,31 @@ void MainWindow::CreateROI()
             RoiImName += to_string(ui->spinBoxRoiSize->value());
             RoiImName += "Cnt";
             RoiImName += to_string(maxRoiNr);
+
+
+            RoiImName += "Nr";
+            RoiImName += to_string(ui->spinBoxRoiNr->value());
+            switch(ui->comboBoxDisplayRange->currentIndex())
+            {
+            case 1:
+                RoiImName += "NormFixed";
+                break;
+            case 2:
+                RoiImName += "NormMeanPM3STD";
+                break;
+            case 3:
+                RoiImName += "Norm1_99Perc";
+                break;
+            case 4:
+                RoiImName += "NormMinMax";
+                break;
+            default:
+                RoiImName += "NormNone";
+                break;
+            }
+            RoiImName += "BpP";
+            RoiImName += to_string(ui->spinBoxROIBitPerPix->value());
+
             RoiImName +=  ".bmp";
             fileToSave.append(RoiImName);
             SaveScaledImage(SmallIm, SmallMask, fileToSave.string(), ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex());
@@ -1825,6 +1956,21 @@ void MainWindow::on_spinBoxMinHist_valueChanged(int arg1)
 }
 
 void MainWindow::on_spinBoxMaxHist_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxShowBinedROI_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_comboBoxROINorm_currentIndexChanged(int index)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxROIBitPerPix_valueChanged(int arg1)
 {
     ModeSelect();
 }
