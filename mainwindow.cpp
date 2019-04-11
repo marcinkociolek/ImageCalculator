@@ -212,6 +212,49 @@ bool GetTiffProperties(string FileName, float &xRes, float &yRes)
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------
+Mat CreateNormalisedImage16U(Mat ImIn, double minNorm, double maxNorm, int nrOfBins)
+{
+    Mat ImOut;
+    ImOut.release();
+    if(ImIn.empty())
+        return ImOut;
+    if(ImIn.channels() != 1)
+        return ImOut;
+    if(ImIn.type() != CV_16U)
+        return ImOut;
+
+    int maxX = ImIn.cols;
+    int maxY = ImIn.rows;
+    int maxXY = maxX*maxY;
+
+    if(maxXY == 0)
+        return ImOut;
+    ImOut = Mat::zeros(maxY,maxX,CV_16U);
+
+
+    double maxVal = (double)(nrOfBins-1);
+    double offset = minNorm;
+    double coeff = (maxNorm - minNorm) * maxVal;
+
+    uint16 *wImIn  = (uint16 *)ImIn.data;
+    uint16 *wImOut  = (uint16 *)ImOut.data;
+
+
+
+    for(int i = 0; i < maxXY; i++)
+    {
+        double val = ((double)*wImIn - offset) * coeff;
+        if(val > maxVal)
+            val = maxVal;
+        if(val < 0)
+            val = 0;
+        *wImOut = round(val);
+
+        wImIn++;
+        wImOut++;
+    }
+    return ImOut;
+}
 //------------------------------------------------------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------------------------------------------------------
@@ -247,6 +290,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBoxGradientDirection->addItem("Y");
     ui->comboBoxGradientDirection->addItem("XY");
 
+    ui->comboBoxROINorm->addItem("min-max");
+    ui->comboBoxROINorm->addItem("+/-3 sigma");
+    ui->comboBoxROINorm->addItem("1% - 3%");
+
+    ui->comboBoxROINorm->setCurrentIndex(0);
 
     resizeScale = 0.5;
     ui->lineEditImageScale->setText(QString("%1") .arg(resizeScale));
@@ -993,6 +1041,7 @@ void MainWindow::CreateROI()
         ShowsScaledImage(ShowRegion(Mask), "Output Image",displayScale);
     }
 
+
     if(ui->checkBoxSaveROIbmp->checkState())
     {
         path fileToSave = OutFolder;
@@ -1023,7 +1072,12 @@ void MainWindow::CreateROI()
         ImIn.convertTo(ImOut,CV_16U);
         HistogramInteger IntensityHist;
 
-        IntensityHist.FromMat16U(ImOut,Mask,ui->spinBoxRoiNr->value());
+        if(ui->checkBoxFixtRangeHistogram->checkState())
+            IntensityHist.FromMat16ULimit(ImOut, Mask, ui->spinBoxRoiNr->value(),
+                                          ui->spinBoxMinHist->value(),
+                                          ui->spinBoxMaxHist->value());
+        else
+            IntensityHist.FromMat16U(ImOut,Mask,ui->spinBoxRoiNr->value());
 
         if(ui->checkBoxShowHist->checkState())
         {
@@ -1100,6 +1154,42 @@ void MainWindow::CreateROI()
         if(ui->checkBoxShowNormalisedROI->checkState())
             ShowsScaledImage(SmallIm, SmallMask, "ROI small", ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex() );
                          //(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
+
+        if(ui->checkBoxShowBinedROI->checkState())
+        {
+
+            Mat ImToShow;
+
+            double minNorm = 0.0;
+            double maxNorm = 255.0;
+
+            switch(ui->comboBoxROINorm->currentIndex())
+            {
+
+
+            case 1:
+                NormParamsMeanP3Std(SmallIm, SmallMask, (uint16_t)ui->spinBoxRoiNr->value(), &maxNorm, &minNorm);
+                break;
+            case 2:
+                NormParams1to99perc(SmallIm, SmallMask,(uint16_t)ui->spinBoxRoiNr->value(), &maxNorm, &minNorm);
+                break;
+            default:
+                NormParamsMinMax(SmallIm, SmallMask, (uint16_t)ui->spinBoxRoiNr->value(), &maxNorm, &minNorm);
+                break;
+            }
+            int binCount = (int)pow(2,ui->spinBoxROIBitPerPix->value());
+
+            Mat ImBinned = CreateNormalisedImage16U(SmallIm,minNorm,maxNorm,binCount);
+
+            ImToShow = ShowImage16PseudoColor(ImBinned,0.0,binCount-1);
+
+            if (ui->doubleSpinBoxROIScale->value() != 1.0)
+                cv::resize(ImToShow,ImToShow,Size(), ui->doubleSpinBoxROIScale->value(), ui->doubleSpinBoxROIScale->value(), INTER_AREA);
+
+            imshow("Im Binned", ImToShow);
+
+        }
+
         if(ui->checkBoxSaveNormalisedRoiImage->checkState())
         {
             path fileToOpen(FileName);
@@ -1720,4 +1810,21 @@ void MainWindow::on_lineEditMaZdaOptionsFile_returnPressed()
     std::ofstream out (textOutFile.string());
     out << OutString;
     out.close();
+}
+
+void MainWindow::on_checkBoxFixtRangeHistogram_toggled(bool checked)
+{
+
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxMinHist_valueChanged(int arg1)
+{
+
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxMaxHist_valueChanged(int arg1)
+{
+    ModeSelect();
 }

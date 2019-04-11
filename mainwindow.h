@@ -179,6 +179,12 @@ private slots:
 
     void on_lineEditMaZdaOptionsFile_returnPressed();
 
+    void on_checkBoxFixtRangeHistogram_toggled(bool checked);
+
+    void on_spinBoxMinHist_valueChanged(int arg1);
+
+    void on_spinBoxMaxHist_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
 
