@@ -68,16 +68,20 @@ public:
 
     void OpenImageFolder();
     void ReadImage();
+    void GetDisplayRange(cv::Mat Im, int dispMode, double *minDisp, double *maxDisp);
+    void GetDisplayRange(cv::Mat Im, cv::Mat Mask, uint16_t RoiNr, int dispMode, double *minDisp, double *maxDisp);
     void ShowsScaledImage(cv::Mat Im, std::string ImWindowName, double dispScale, int dispMode = 0);
     void ShowsScaledImage(cv::Mat Im, cv::Mat Mask, std::string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode );
     void SaveScaledImage(cv::Mat Im, std::string FileName, double dispScale,int dispMode);
     void SaveScaledImage(cv::Mat Im, cv::Mat Mask, std::string FileName, double dispScale, uint16_t RoiNr, int dispMode );
+
     void ModeSelect();
     void TiffRoiFromRed();
     void ImageResize();
     void ImageLinearOperation();
     void CreateROI();
     std::string CreateMaZdaScript();
+    void ViewRoi();
     //void GetDisplayParams(Mat ImIn, double maxIm, double minIm);
 
 private slots:
@@ -190,6 +194,22 @@ private slots:
     void on_comboBoxROINorm_currentIndexChanged(int index);
 
     void on_spinBoxROIBitPerPix_valueChanged(int arg1);
+
+    void on_HistogramBin_valueChanged(int arg1);
+
+    void on_lineEditViewROIFolder_returnPressed();
+
+    void on_checkBoxViewRoiShowBined_toggled(bool checked);
+
+    void on_comboBoxViewROINorm_currentIndexChanged(int index);
+
+    void on_spinBoxViewROIBitPerPixel_valueChanged(int arg1);
+
+    void on_spinBoxViewROINr_valueChanged(int arg1);
+
+    void on_checkBoxViewSaveBinnedROIImage_toggled(bool checked);
+
+    void on_checkBoxVewSaveRoiBinnedHistogram_toggled(bool checked);
 
 private:
     Ui::MainWindow *ui;

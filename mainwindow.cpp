@@ -39,6 +39,7 @@ using namespace cv;
 //------------------------------------------------------------------------------------------------------------------------------
 //          My functions outside the Mainwindow class
 //------------------------------------------------------------------------------------------------------------------------------
+
 //----------------------------------------------------------------------------------------------------------
 Mat LoadROI(boost::filesystem::path InputFile,int maxX, int maxY)
 {
@@ -299,6 +300,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->comboBoxROINorm->setCurrentIndex(0);
 
+    ui->comboBoxViewROINorm->addItem("min-max");
+    ui->comboBoxViewROINorm->addItem("+/-3 sigma");
+    ui->comboBoxViewROINorm->addItem("1% - 3%");
+
+    ui->comboBoxViewROINorm->setCurrentIndex(0);
+
+
+
     resizeScale = 0.5;
     ui->lineEditImageScale->setText(QString("%1") .arg(resizeScale));
 //    int a0 = CV_INTER_NN;
@@ -397,6 +406,9 @@ void MainWindow::ModeSelect()
     case 4:
         OutString += CreateMaZdaScript();
         break;
+    case 5:
+        ViewRoi();
+        break;
     default:
 
             break;
@@ -453,8 +465,52 @@ void MainWindow::ReadImage()
 
     if(ui->checkBoxShowInput->checkState())
         ShowsScaledImage(ImIn, "Input Image", displayScale);
-
-    ShowsScaledImage(ImIn, "Input Image PC", displayScale, ui->comboBoxDisplayRange->currentIndex());
+    if(ui->checkBoxShowInputModyfied->checkState())
+        ShowsScaledImage(ImIn, "Input Image PC", displayScale, ui->comboBoxDisplayRange->currentIndex());
+}
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::GetDisplayRange(Mat Im, int dispMode, double *minDisp, double *maxDisp)
+{
+    switch(dispMode)
+    {
+    case 1:
+        *minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        *maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+        break;
+    case 2:
+        NormParamsMinMax(Im, maxDisp, minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, maxDisp, minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, maxDisp, minDisp);
+        break;
+    default:
+        break;
+    }
+}
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::GetDisplayRange(Mat Im, Mat Mask, uint16_t RoiNr, int dispMode, double *minDisp, double *maxDisp)
+{
+    switch(dispMode)
+    {
+    case 1:
+        *minDisp = ui->doubleSpinBoxFixMinDisp->value();
+        *maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
+        break;
+    case 2:
+        NormParamsMinMax(Im, Mask, RoiNr, maxDisp, minDisp);
+        break;
+    case 3:
+        NormParamsMeanP3Std(Im, Mask, RoiNr, maxDisp, minDisp);
+        break;
+    case 4:
+        NormParams1to99perc(Im, Mask, RoiNr, maxDisp, minDisp);
+        break;
+    default:
+        break;
+    }
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,int dispMode)
@@ -464,47 +520,25 @@ void MainWindow::ShowsScaledImage(Mat Im, string ImWindowName, double dispScale,
         ui->textEditOut->append("Empty Image to show");
         return;
     }
-
     Mat ImToShow;
-
-    double minDisp = 0.0;
-    double maxDisp = 255.0;
-
-    switch(dispMode)
-    {
-    case 1:
-        minDisp = ui->doubleSpinBoxFixMinDisp->value();
-        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
-
-        break;
-    case 2:
-        NormParamsMinMax(Im, &maxDisp, &minDisp);
-        break;
-    case 3:
-        NormParamsMeanP3Std(Im, &maxDisp, &minDisp);
-        break;
-    case 4:
-        NormParams1to99perc(Im, &maxDisp, &minDisp);
-        break;
-    default:
-        break;
-    }
 
     if(dispMode > 0)
     {
+        double minDisp, maxDisp;
+        GetDisplayRange(Im, dispMode, &minDisp, &maxDisp);
+
         Mat ImF;
         Im.convertTo(ImF, CV_64F);
         ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
         ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
-
     }
     else
         ImToShow = Im.clone();
 
     if (dispScale != 1.0)
         cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
-    imshow(ImWindowName, ImToShow);
 
+    imshow(ImWindowName, ImToShow);
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::ShowsScaledImage(Mat Im, Mat Mask, string ImWindowName, double dispScale, uint16_t RoiNr, int dispMode )
@@ -517,36 +551,15 @@ void MainWindow::ShowsScaledImage(Mat Im, Mat Mask, string ImWindowName, double 
 
     Mat ImToShow;
 
-    double minDisp = 0.0;
-    double maxDisp = 255.0;
-
-    switch(dispMode)
-    {
-    case 1:
-        minDisp = ui->doubleSpinBoxFixMinDisp->value();
-        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
-
-        break;
-    case 2:
-        NormParamsMinMax(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    case 3:
-        NormParamsMeanP3Std(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    case 4:
-        NormParams1to99perc(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    default:
-        break;
-    }
-
     if(dispMode > 0)
     {
+        double minDisp, maxDisp;
+        GetDisplayRange(Im, Mask, RoiNr, dispMode, &minDisp, &maxDisp);
+
         Mat ImF;
         Im.convertTo(ImF, CV_64F);
         ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
         ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
-
     }
     else
         ImToShow = Im.clone();
@@ -566,36 +579,14 @@ void MainWindow::SaveScaledImage(Mat Im, string FileName, double dispScale,int d
 
     Mat ImToShow;
 
-    double minDisp = 0.0;
-    double maxDisp = 255.0;
-
-    switch(dispMode)
-    {
-    case 1:
-        minDisp = ui->doubleSpinBoxFixMinDisp->value();
-        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
-
-        break;
-    case 2:
-        NormParamsMinMax(Im, &maxDisp, &minDisp);
-        break;
-    case 3:
-        NormParamsMeanP3Std(Im, &maxDisp, &minDisp);
-        break;
-    case 4:
-        NormParams1to99perc(Im, &maxDisp, &minDisp);
-        break;
-    default:
-        break;
-    }
-
     if(dispMode > 0)
     {
+        double minDisp, maxDisp;
+        GetDisplayRange(Im, dispMode, &minDisp, &maxDisp);
+
         Mat ImF;
         Im.convertTo(ImF, CV_64F);
         ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
-        ui->textEditOut->append("range " + QString::number(minDisp) + " - " + QString::number(maxDisp));
-
     }
     else
         ImToShow = Im.clone();
@@ -603,7 +594,6 @@ void MainWindow::SaveScaledImage(Mat Im, string FileName, double dispScale,int d
     if (dispScale != 1.0)
         cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
     imwrite(FileName, ImToShow);
-
 }
 //------------------------------------------------------------------------------------------------------------------------------
 void MainWindow::SaveScaledImage(Mat Im, Mat Mask, string FileName, double dispScale, uint16_t RoiNr, int dispMode )
@@ -616,31 +606,11 @@ void MainWindow::SaveScaledImage(Mat Im, Mat Mask, string FileName, double dispS
 
     Mat ImToShow;
 
-    double minDisp = 0.0;
-    double maxDisp = 255.0;
-
-    switch(dispMode)
-    {
-    case 1:
-        minDisp = ui->doubleSpinBoxFixMinDisp->value();
-        maxDisp = ui->doubleSpinBoxFixMaxDisp->value();
-
-        break;
-    case 2:
-        NormParamsMinMax(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    case 3:
-        NormParamsMeanP3Std(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    case 4:
-        NormParams1to99perc(Im, Mask, RoiNr, &maxDisp, &minDisp);
-        break;
-    default:
-        break;
-    }
-
     if(dispMode > 0)
     {
+        double minDisp, maxDisp;
+        GetDisplayRange(Im, Mask, RoiNr, dispMode, &minDisp, &maxDisp);
+
         Mat ImF;
         Im.convertTo(ImF, CV_64F);
         ImToShow = ShowImageF64PseudoColor(ImF, minDisp, maxDisp);
@@ -1230,14 +1200,14 @@ void MainWindow::CreateROI()
                 RoiImName += to_string(ui->spinBoxROIBitPerPix->value());
                 RoiImName +=  ".bmp";
                 fileToSave.append(RoiImName);
-                SaveScaledImage(SmallIm, SmallMask, fileToSave.string(), ui->doubleSpinBoxROIScale->value(), roiNr, ui->comboBoxDisplayRange->currentIndex());
+                imwrite(fileToSave.string(),ImToShow);
             }
 
             if(ui->checkBoxShowHist->checkState() || ui->checkBoxSaveBinnedROIHist->checkState())
             {
                 HistogramInteger IntensityHist;
 
-                IntensityHist.FromMat16U(ImBinned,SmallMask,ui->spinBoxRoiNr->value());
+                IntensityHist.FromMat16ULimit(ImBinned,SmallMask,ui->spinBoxRoiNr->value(),0,binCount+1);
 
                 if(ui->checkBoxShowHist->checkState())
                 {
@@ -1512,6 +1482,193 @@ string MainWindow::CreateMaZdaScript()
     out += "\n";
     return out;
 }
+//------------------------------------------------------------------------------------------------------------------------------
+void MainWindow::ViewRoi()
+{
+    if(ImIn.empty())
+    {
+        ui->textEditOut->append("Empty Image");
+        return ;
+    }
+    Mat Mask ;
+
+    int maxX = ImIn.cols;
+    int maxY = ImIn.rows;
+
+    path ROIFile = ImageFolder;
+    path ImageFileName(FileName);
+    ROIFile.append("/" + ui->lineEditViewROIFolder->text().toStdString() + ImageFileName.stem().string() + ".roi");
+
+    if(exists(ROIFile))
+    {
+        Mask =  LoadROI(ROIFile, maxX, maxY);
+        ui->textEditOut->append("Valid Roi");
+    }
+    else
+    {
+        ui->textEditOut->append("No Roi For The Frame");
+    }
+
+    if(ui->checkBoxShowOutput->checkState())
+    {
+
+        double minDisp, maxDisp;
+        GetDisplayRange(ImIn, ui->comboBoxDisplayRange->currentIndex(), &minDisp, &maxDisp);
+
+        Mat ImShowGray = ShowImage16Gray(ImIn,minDisp,maxDisp);
+        Mat ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
+        ShowsScaledImage(ImShow, "Output Image",displayScale);
+    }
+    if(ui->checkBoxShowHist->checkState())
+    {
+        Mat ImTemp;
+        ImIn.convertTo(ImTemp,CV_16U);
+        HistogramInteger IntensityHist;
+
+        IntensityHist.FromMat16U(ImTemp,Mask,1);
+
+        Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                          ui->spinBoxHistScaleCoef->value(),
+                                          ui->spinBoxHistBarWidth->value());
+        imshow("Intensity histogram Input",HistPlot);
+
+
+        if(ui->checkBoxVewSaveRoiBinnedHistogram->checkState())
+        {
+            path fileToOpen(FileName);
+            string RoiImName = fileToOpen.stem().string();
+
+            path fileToSave = OutFolder;
+            //RoiImName += to_string(maxRoiNr);
+            RoiImName += "Nr";
+            RoiImName += to_string(ui->spinBoxViewROINr->value());
+            RoiImName += "NormNone";
+
+            RoiImName += "BpP";
+            RoiImName += to_string(ui->spinBoxViewROIBitPerPixel->value());
+            RoiImName +=  ".txt";
+
+            fileToSave.append(RoiImName);
+
+            std::ofstream out (fileToSave.string());
+            out << IntensityHist.GetString();
+            out.close();
+        }
+        IntensityHist.Release();
+    }
+
+    if(ui->checkBoxViewRoiShowBined->checkState())
+    {
+        Mat ImToShow;
+
+        double minNorm = 0.0;
+        double maxNorm = 255.0;
+
+        switch(ui->comboBoxViewROINorm->currentIndex())
+        {
+        case 1:
+            NormParamsMeanP3Std(ImIn, Mask, (uint16_t)ui->spinBoxViewROINr->value(), &maxNorm, &minNorm);
+            break;
+        case 2:
+            NormParams1to99perc(ImIn, Mask,(uint16_t)ui->spinBoxViewROINr->value(), &maxNorm, &minNorm);
+            break;
+        default:
+            NormParamsMinMax(ImIn, Mask, (uint16_t)ui->spinBoxViewROINr->value(), &maxNorm, &minNorm);
+            break;
+        }
+        int binCount = (int)pow(2,ui->spinBoxViewROIBitPerPixel->value());
+
+        Mat ImBinned = CreateNormalisedImage16U(ImIn,minNorm,maxNorm,binCount);
+
+        ImToShow = ShowImage16PseudoColor(ImBinned,0.0,binCount-1);
+
+        if (displayScale != 1.0)
+            cv::resize(ImToShow,ImToShow,Size(), displayScale, displayScale, INTER_AREA);
+
+        imshow("Im Binned", ImToShow);
+
+
+
+        if(ui->checkBoxViewSaveBinnedROIImage->checkState())
+        {
+            path fileToOpen(FileName);
+            string RoiImName = fileToOpen.stem().string();
+
+
+            //RoiImName += to_string(maxRoiNr);
+            RoiImName += "Nr";
+            RoiImName += to_string(ui->spinBoxViewROINr->value());
+            switch(ui->comboBoxROINorm->currentIndex())
+            {
+            case 1:
+                RoiImName += "NormMeanPM3STD";
+                break;
+            case 2:
+                RoiImName += "Norm1_99Perc";
+                break;
+            default:
+                RoiImName += "NormMinMax";
+                break;
+            }
+            RoiImName += "BpP";
+            RoiImName += to_string(ui->spinBoxViewROIBitPerPixel->value());
+            RoiImName +=  ".bmp";
+            path fileToSave(OutFolder);
+            fileToSave.append(RoiImName);
+            imwrite(fileToSave.string(),ImToShow);
+        }
+
+        if(ui->checkBoxShowHist->checkState() || ui->checkBoxVewSaveRoiBinnedHistogram->checkState())
+        {
+            HistogramInteger IntensityHist;
+
+            IntensityHist.FromMat16ULimit(ImBinned, Mask, ui->spinBoxViewROINr->value(),0 , binCount-1);
+
+            if(ui->checkBoxShowHist->checkState())
+            {
+                Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
+                                                  ui->spinBoxHistScaleCoef->value(),
+                                                  ui->spinBoxHistBarWidth->value());
+                imshow("Intensity histogram ROI Binned",HistPlot);
+            }
+
+
+            if(ui->checkBoxVewSaveRoiBinnedHistogram->checkState())
+            {
+                path fileToOpen(FileName);
+                string RoiImName = fileToOpen.stem().string();
+
+                path fileToSave = OutFolder;
+                //RoiImName += to_string(maxRoiNr);
+                RoiImName += "Nr";
+                RoiImName += to_string(ui->spinBoxViewROINr->value());
+                switch(ui->comboBoxROINorm->currentIndex())
+                {
+                case 1:
+                    RoiImName += "NormMeanPM3STD";
+                    break;
+                case 2:
+                    RoiImName += "Norm1_99Perc";
+                    break;
+                default:
+                    RoiImName += "NormMinMax";
+                    break;
+                }
+                RoiImName += "BpP";
+                RoiImName += to_string(ui->spinBoxViewROIBitPerPixel->value());
+                RoiImName +=  ".txt";
+
+                fileToSave.append(RoiImName);
+
+                std::ofstream out (fileToSave.string());
+                out << IntensityHist.GetString();
+                out.close();
+            }
+            IntensityHist.Release();
+        }
+    }
+}
+//------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------
 //          Slots
 //------------------------------------------------------------------------------------------------------------------------------
@@ -1971,6 +2128,46 @@ void MainWindow::on_comboBoxROINorm_currentIndexChanged(int index)
 }
 
 void MainWindow::on_spinBoxROIBitPerPix_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_HistogramBin_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_lineEditViewROIFolder_returnPressed()
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxViewRoiShowBined_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_comboBoxViewROINorm_currentIndexChanged(int index)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxViewROIBitPerPixel_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_spinBoxViewROINr_valueChanged(int arg1)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxViewSaveBinnedROIImage_toggled(bool checked)
+{
+    ModeSelect();
+}
+
+void MainWindow::on_checkBoxVewSaveRoiBinnedHistogram_toggled(bool checked)
 {
     ModeSelect();
 }
