@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>908</width>
-    <height>661</height>
+    <height>704</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -187,6 +187,9 @@
      <property name="maximum">
       <number>8</number>
      </property>
+     <property name="value">
+      <number>2</number>
+     </property>
     </widget>
     <widget class="QLabel" name="labelScaleBase">
      <property name="geometry">
@@ -215,6 +218,9 @@
      </property>
      <property name="maximum">
       <number>2</number>
+     </property>
+     <property name="value">
+      <number>1</number>
      </property>
     </widget>
     <widget class="QLabel" name="labelScalePower">
@@ -379,6 +385,9 @@
      <property name="text">
       <string>Show Histogram</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
     <widget class="QLabel" name="labelMaxHistScale_2">
      <property name="geometry">
@@ -437,7 +446,7 @@
       <number>5</number>
      </property>
      <property name="value">
-      <number>3</number>
+      <number>2</number>
      </property>
     </widget>
     <widget class="QLabel" name="labelDirHistBarWidth_2">
@@ -555,6 +564,9 @@
      <property name="maximum">
       <number>65535</number>
      </property>
+     <property name="value">
+      <number>350</number>
+     </property>
     </widget>
     <widget class="QLabel" name="labelHistogramBin">
      <property name="geometry">
@@ -611,11 +623,11 @@
       <x>510</x>
       <y>280</y>
       <width>391</width>
-      <height>311</height>
+      <height>341</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1674,6 +1686,9 @@
       </property>
       <property name="text">
        <string>Show Binned ROI</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
      <widget class="QSpinBox" name="spinBoxViewROINr">

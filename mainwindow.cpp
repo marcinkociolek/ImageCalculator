@@ -1518,14 +1518,35 @@ void MainWindow::ViewRoi()
         Mat ImShowGray = ShowImage16Gray(ImIn,minDisp,maxDisp);
         Mat ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
         ShowsScaledImage(ImShow, "Output Image",displayScale);
+        if(ui->checkBoxViewSaveBinnedROIImage->checkState())
+        {
+            path fileToOpen(FileName);
+            string RoiImName = fileToOpen.stem().string();
+
+            path fileToSave = OutFolder;
+            //RoiImName += to_string(maxRoiNr);
+            RoiImName += "Nr";
+            RoiImName += to_string(ui->spinBoxViewROINr->value());
+            RoiImName += "NormNone";
+
+            RoiImName +=  ".bmp";
+
+            fileToSave.append(RoiImName);
+            SaveScaledImage(ImShow, fileToSave.string(),displayScale,0);
+
+
+        }
     }
+
     if(ui->checkBoxShowHist->checkState())
     {
         Mat ImTemp;
         ImIn.convertTo(ImTemp,CV_16U);
         HistogramInteger IntensityHist;
-
-        IntensityHist.FromMat16U(ImTemp,Mask,1);
+        if(ui->checkBoxFixtRangeHistogram->checkState())
+            IntensityHist.FromMat16ULimit(ImTemp,Mask,1, ui->spinBoxMinHist->value(),ui->spinBoxMaxHist->value());
+        else
+            IntensityHist.FromMat16U(ImTemp,Mask,1);
 
         Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                           ui->spinBoxHistScaleCoef->value(),
@@ -1544,8 +1565,6 @@ void MainWindow::ViewRoi()
             RoiImName += to_string(ui->spinBoxViewROINr->value());
             RoiImName += "NormNone";
 
-            RoiImName += "BpP";
-            RoiImName += to_string(ui->spinBoxViewROIBitPerPixel->value());
             RoiImName +=  ".txt";
 
             fileToSave.append(RoiImName);
@@ -1598,7 +1617,7 @@ void MainWindow::ViewRoi()
             //RoiImName += to_string(maxRoiNr);
             RoiImName += "Nr";
             RoiImName += to_string(ui->spinBoxViewROINr->value());
-            switch(ui->comboBoxROINorm->currentIndex())
+            switch(ui->comboBoxViewROINorm->currentIndex())
             {
             case 1:
                 RoiImName += "NormMeanPM3STD";
@@ -1642,7 +1661,7 @@ void MainWindow::ViewRoi()
                 //RoiImName += to_string(maxRoiNr);
                 RoiImName += "Nr";
                 RoiImName += to_string(ui->spinBoxViewROINr->value());
-                switch(ui->comboBoxROINorm->currentIndex())
+                switch(ui->comboBoxViewROINorm->currentIndex())
                 {
                 case 1:
                     RoiImName += "NormMeanPM3STD";
