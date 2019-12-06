@@ -1091,6 +1091,14 @@ void MainWindow::CreateROI()
             out.close();
 
         }
+
+
+        if(ui->checkBoxSaveStatistics->checkState())
+        {
+            OutStringStat.clear();
+            OutStringStat = IntensityHist.StatisticStringOut();
+            ui->textEditOut->append(QString::fromStdString(OutStringStat));
+        }
         IntensityHist.Release();
     }
 
@@ -1507,6 +1515,7 @@ void MainWindow::ViewRoi()
     else
     {
         ui->textEditOut->append("No Roi For The Frame");
+        return;
     }
 
     if(ui->checkBoxShowOutput->checkState())
@@ -2059,6 +2068,8 @@ void MainWindow::on_doubleSpinBoxROIScale_valueChanged(double arg1)
 
 void MainWindow::on_pushButtonProcessAll_clicked()
 {
+    string CumulatedStatString = StatisticStringHeader();
+    OutStringStat.clear();
     if (!exists(OutFolder))
     {
         ui->textEditOut->append( string("Error" + OutFolder.string() + " does not exists").c_str());
@@ -2076,10 +2087,23 @@ void MainWindow::on_pushButtonProcessAll_clicked()
     for(int fileNr = 0; fileNr< filesCount; fileNr++)
     {
         ui->listWidgetImageFiles->setCurrentRow(fileNr);
+        CumulatedStatString += OutStringStat;
     }
 
     switch(operationMode)
     {
+    case 3:
+        {
+            CumulatedStatString += OutStringStat;
+
+            path textOutFile = OutFolder;
+            textOutFile.append("HistStatistics.txt");
+
+            std::ofstream out (textOutFile.string());
+            out << CumulatedStatString;
+            out.close();
+        }
+        break;
     case 4:
         {
             path textOutFile = OutFolder;

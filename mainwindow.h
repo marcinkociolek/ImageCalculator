@@ -31,6 +31,7 @@ public:
     std::string FileName;
 
     std::string OutString;
+    std::string OutStringStat;
 
     cv::Mat ImIn;
     cv::Mat ImOut;
