@@ -627,7 +627,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>5</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1640,7 +1640,7 @@
        </rect>
       </property>
       <property name="text">
-       <string/>
+       <string>ROI/</string>
       </property>
      </widget>
      <widget class="QLabel" name="labelViewROIBpPIX">
@@ -1723,7 +1723,7 @@
        <string>ROI# </string>
       </property>
       <property name="maximum">
-       <number>1</number>
+       <number>100</number>
       </property>
       <property name="value">
        <number>1</number>

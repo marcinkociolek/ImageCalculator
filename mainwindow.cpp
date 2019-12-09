@@ -62,7 +62,7 @@ Mat LoadROI(boost::filesystem::path InputFile,int maxX, int maxY)
 
     MazdaRoiResizer<MR2DType> resizer;
 
-    wMask = (unsigned short*)Mask.data;
+
     int numRois = ROIVect.size();
 
     if (numRois > 100)
@@ -71,10 +71,11 @@ Mat LoadROI(boost::filesystem::path InputFile,int maxX, int maxY)
 
     for(int i = 0; i < numRois;i++)
     {
-        if(!ROIVect.at(0)->IsEmpty())
+        if(!ROIVect.at(i)->IsEmpty())
         {
-            MR2DType *ROI = resizer.Upsize(ROIVect.at(0),imSize);
+            MR2DType *ROI = resizer.Upsize(ROIVect.at(i),imSize);
             MazdaRoiIterator<MR2DType> iterator(ROI);
+            wMask = (unsigned short*)Mask.data;
             while(! iterator.IsBehind())
             {
                 if (iterator.GetPixel())
