@@ -1526,7 +1526,11 @@ void MainWindow::ViewRoi()
         GetDisplayRange(ImIn, ui->comboBoxDisplayRange->currentIndex(), &minDisp, &maxDisp);
 
         Mat ImShowGray = ShowImage16Gray(ImIn,minDisp,maxDisp);
-        Mat ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
+        Mat ImShow;
+        if(ui->checkBoxShowROIOnImage->checkState())
+            ImShow = ShowSolidRegionOnImage(GetContour5(Mask),ImShowGray);
+        else
+            ImShow = ImShowGray;
         ShowsScaledImage(ImShow, "Output Image",displayScale);
         if(ui->checkBoxViewSaveBinnedROIImage->checkState())
         {

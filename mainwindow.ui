@@ -627,7 +627,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>5</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1753,6 +1753,22 @@
       </property>
       <property name="text">
        <string>Save binned ROI image</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxShowROIOnImage">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>60</y>
+        <width>141</width>
+        <height>25</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Show Roi on image</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>
