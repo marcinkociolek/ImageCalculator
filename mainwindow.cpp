@@ -119,6 +119,7 @@ string InterpolationToString(int interpolationNr)
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------
+/*
 string MatPropetiesAsText(Mat Im)
 {
     string Out ="Image properties: ";
@@ -187,6 +188,7 @@ string TiffFilePropetiesAsText(string FileName)
 
     return Out;
 }
+*/
 //------------------------------------------------------------------------------------------------------------------------------
 bool GetTiffProperties(string FileName, float &xRes, float &yRes)
 {
@@ -959,7 +961,7 @@ void MainWindow::CreateROI()
     {
         for (int x = firstRoiX; x < lastRoiX; x += roiShift)
         {
-            if(ui->checkBoxReducedROI->checkState())
+            if(ui->checkBoxReducedROI->checkState() && !ui->checkBoxReducedROIComplement->checkState())
             {
                 if (skip <= 0)
                     skip = ui->spinBoxSkipCount->value();
@@ -967,6 +969,18 @@ void MainWindow::CreateROI()
                 {
                     skip--;
                     continue;
+                }
+            }
+            if(ui->checkBoxReducedROI->checkState() && ui->checkBoxReducedROIComplement->checkState())
+            {
+                if (skip <= 0)
+                {
+                    skip = ui->spinBoxSkipCount->value();
+                    continue;
+                }
+                else
+                {
+                    skip--;
                 }
             }
             switch (ui->comboBoxRoiShape->currentIndex())

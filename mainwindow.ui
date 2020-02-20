@@ -623,11 +623,11 @@
       <x>510</x>
       <y>280</y>
       <width>391</width>
-      <height>341</height>
+      <height>371</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1191,7 +1191,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>160</y>
+        <y>200</y>
         <width>72</width>
         <height>20</height>
        </rect>
@@ -1216,7 +1216,7 @@
      <widget class="QSpinBox" name="spinBoxSkipCount">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>100</x>
         <y>140</y>
         <width>43</width>
         <height>22</height>
@@ -1290,7 +1290,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>210</y>
+        <y>250</y>
         <width>161</width>
         <height>20</height>
        </rect>
@@ -1303,7 +1303,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>180</y>
+        <y>220</y>
         <width>101</width>
         <height>20</height>
        </rect>
@@ -1316,7 +1316,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>230</y>
+        <y>270</y>
         <width>161</width>
         <height>20</height>
        </rect>
@@ -1387,7 +1387,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>260</y>
+        <y>300</y>
         <width>151</width>
         <height>20</height>
        </rect>
@@ -1400,7 +1400,7 @@
       <property name="geometry">
        <rect>
         <x>10</x>
-        <y>280</y>
+        <y>320</y>
         <width>161</width>
         <height>20</height>
        </rect>
@@ -1420,6 +1420,19 @@
       </property>
       <property name="text">
        <string>Save Statistics</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBoxReducedROIComplement">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>160</y>
+        <width>91</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Complement</string>
       </property>
      </widget>
     </widget>
