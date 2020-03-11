@@ -961,6 +961,7 @@ void MainWindow::CreateROI()
     {
         for (int x = firstRoiX; x < lastRoiX; x += roiShift)
         {
+            if()
             if(ui->checkBoxReducedROI->checkState() && !ui->checkBoxReducedROIComplement->checkState())
             {
                 if (skip <= 0)
