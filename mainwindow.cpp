@@ -961,7 +961,7 @@ void MainWindow::CreateROI()
     {
         for (int x = firstRoiX; x < lastRoiX; x += roiShift)
         {
-            if()
+            //if()
             if(ui->checkBoxReducedROI->checkState() && !ui->checkBoxReducedROIComplement->checkState())
             {
                 if (skip <= 0)
@@ -1573,9 +1573,9 @@ void MainWindow::ViewRoi()
         ImIn.convertTo(ImTemp,CV_16U);
         HistogramInteger IntensityHist;
         if(ui->checkBoxFixtRangeHistogram->checkState())
-            IntensityHist.FromMat16ULimit(ImTemp,Mask,1, ui->spinBoxMinHist->value(),ui->spinBoxMaxHist->value());
+            IntensityHist.FromMat16ULimit(ImTemp,Mask,ui->spinBoxViewROINr->value(), ui->spinBoxMinHist->value(),ui->spinBoxMaxHist->value());
         else
-            IntensityHist.FromMat16U(ImTemp,Mask,1);
+            IntensityHist.FromMat16U(ImTemp,Mask,ui->spinBoxViewROINr->value());
 
         Mat HistPlot = IntensityHist.Plot(ui->spinBoxHistScaleHeight->value(),
                                           ui->spinBoxHistScaleCoef->value(),
